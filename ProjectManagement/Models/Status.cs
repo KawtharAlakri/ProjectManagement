@@ -17,13 +17,13 @@ namespace ProjectManagement.Models
 
         [Key]
         [Column("status_name")]
-        [StringLength(255)]
+        [StringLength(25)]
         [Unicode(false)]
         public string StatusName { get; set; } = null!;
 
-        [InverseProperty("ProjectStatusNavigation")]
+        [InverseProperty("StatusNavigation")]
         public virtual ICollection<Project> Projects { get; set; }
-        [InverseProperty("TaskStatusNavigation")]
+        [InverseProperty("StatusNavigation")]
         public virtual ICollection<Task> Tasks { get; set; }
     }
 }

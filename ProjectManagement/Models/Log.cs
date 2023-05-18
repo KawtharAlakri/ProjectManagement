@@ -12,16 +12,20 @@ namespace ProjectManagement.Models
         [Key]
         [Column("log_id")]
         public int LogId { get; set; }
+        [Column("log_type")]
+        [StringLength(20)]
+        [Unicode(false)]
+        public string LogType { get; set; } = null!;
         [Column("message")]
-        [StringLength(255)]
+        [StringLength(500)]
         [Unicode(false)]
         public string? Message { get; set; }
         [Column("current_value")]
-        [StringLength(255)]
+        [StringLength(500)]
         [Unicode(false)]
         public string? CurrentValue { get; set; }
         [Column("original_value")]
-        [StringLength(255)]
+        [StringLength(500)]
         [Unicode(false)]
         public string? OriginalValue { get; set; }
         [Column("source")]
@@ -32,17 +36,15 @@ namespace ProjectManagement.Models
         [StringLength(255)]
         [Unicode(false)]
         public string PageSource { get; set; } = null!;
-        [Column("log_timestamp", TypeName = "time(4)")]
-        public TimeSpan LogTimestamp { get; set; }
-        [Column("User_username")]
+        [Column("log_timestamp")]
+        public byte[] LogTimestamp { get; set; } = null!;
+        [Column("username")]
         [StringLength(255)]
         [Unicode(false)]
-        public string UserUsername { get; set; } = null!;
-        [Column("log_type", TypeName = "text")]
-        public string LogType { get; set; } = null!;
+        public string Username { get; set; } = null!;
 
-        [ForeignKey("UserUsername")]
+        [ForeignKey("Username")]
         [InverseProperty("Logs")]
-        public virtual User UserUsernameNavigation { get; set; } = null!;
+        public virtual User UsernameNavigation { get; set; } = null!;
     }
 }
