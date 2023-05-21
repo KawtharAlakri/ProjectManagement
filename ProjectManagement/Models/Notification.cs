@@ -13,20 +13,22 @@ namespace ProjectManagement.Models
         [Column("notification_id")]
         public int NotificationId { get; set; }
         [Column("notification_text")]
-        [StringLength(300)]
-        [Unicode(false)]
-        public string NotificationText { get; set; } = null!;
-        [Column("recipient")]
         [StringLength(255)]
         [Unicode(false)]
-        public string Recipient { get; set; } = null!;
+        public string NotificationText { get; set; } = null!;
+        [Column("recipient_id")]
+        public int RecipientId { get; set; }
         [Column("is_read")]
         public bool IsRead { get; set; }
-        [Column("generated_at")]
-        public byte[] GeneratedAt { get; set; } = null!;
+        [Column("notification_timestamp", TypeName = "datetime")]
+        public DateTime NotificationTimestamp { get; set; }
+        [Column("User_username")]
+        [StringLength(255)]
+        [Unicode(false)]
+        public string UserUsername { get; set; } = null!;
 
-        [ForeignKey("Recipient")]
+        [ForeignKey("UserUsername")]
         [InverseProperty("Notifications")]
-        public virtual User RecipientNavigation { get; set; } = null!;
+        public virtual User UserUsernameNavigation { get; set; } = null!;
     }
 }

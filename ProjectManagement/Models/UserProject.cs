@@ -16,14 +16,18 @@ namespace ProjectManagement.Models
         [StringLength(255)]
         [Unicode(false)]
         public string Username { get; set; } = null!;
-        [Column("project_id")]
-        public int ProjectId { get; set; }
+        [Column("User_username")]
+        [StringLength(255)]
+        [Unicode(false)]
+        public string UserUsername { get; set; } = null!;
+        [Column("Project_priject_id")]
+        public int ProjectPrijectId { get; set; }
 
-        [ForeignKey("ProjectId")]
+        [ForeignKey("ProjectPrijectId")]
         [InverseProperty("UserProjects")]
-        public virtual Project Project { get; set; } = null!;
-        [ForeignKey("Username")]
+        public virtual Project ProjectPriject { get; set; } = null!;
+        [ForeignKey("UserUsername")]
         [InverseProperty("UserProjects")]
-        public virtual User UsernameNavigation { get; set; } = null!;
+        public virtual User UserUsernameNavigation { get; set; } = null!;
     }
 }

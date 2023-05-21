@@ -18,7 +18,7 @@ namespace ProjectManagement.Models
         [Key]
         [Column("task_id")]
         public int TaskId { get; set; }
-        [Column("assigned_to")]
+        [Column("Assigned_to")]
         [StringLength(255)]
         [Unicode(false)]
         public string AssignedTo { get; set; } = null!;
@@ -26,29 +26,29 @@ namespace ProjectManagement.Models
         [StringLength(255)]
         [Unicode(false)]
         public string TaskName { get; set; } = null!;
-        [Column("created_at")]
-        public byte[] CreatedAt { get; set; } = null!;
-        [Column("due_date", TypeName = "date")]
-        public DateTime? DueDate { get; set; }
-        [Column("project_id")]
-        public int ProjectId { get; set; }
-        [Column("status")]
-        [StringLength(25)]
+        [Column("start_date", TypeName = "date")]
+        public DateTime StartDate { get; set; }
+        [Column("end_date", TypeName = "date")]
+        public DateTime EndDate { get; set; }
+        [Column("Project_priject_id")]
+        public int ProjectPrijectId { get; set; }
+        [Column("task_status")]
+        [StringLength(255)]
         [Unicode(false)]
-        public string Status { get; set; } = null!;
+        public string TaskStatus { get; set; } = null!;
 
         [ForeignKey("AssignedTo")]
         [InverseProperty("Tasks")]
         public virtual User AssignedToNavigation { get; set; } = null!;
-        [ForeignKey("ProjectId")]
+        [ForeignKey("ProjectPrijectId")]
         [InverseProperty("Tasks")]
-        public virtual Project Project { get; set; } = null!;
-        [ForeignKey("Status")]
+        public virtual Project ProjectPriject { get; set; } = null!;
+        [ForeignKey("TaskStatus")]
         [InverseProperty("Tasks")]
-        public virtual Status StatusNavigation { get; set; } = null!;
+        public virtual Status TaskStatusNavigation { get; set; } = null!;
         [InverseProperty("Task")]
         public virtual ICollection<Comment> Comments { get; set; }
-        [InverseProperty("Task")]
+        [InverseProperty("TaskTask")]
         public virtual ICollection<Document> Documents { get; set; }
     }
 }

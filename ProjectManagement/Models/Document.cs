@@ -20,24 +20,17 @@ namespace ProjectManagement.Models
         [StringLength(255)]
         [Unicode(false)]
         public string FilePath { get; set; } = null!;
+        [Column("document_timestamp", TypeName = "datetime")]
+        public DateTime DocumentTimestamp { get; set; }
+        [Column("Task_task_id")]
+        public int TaskTaskId { get; set; }
         [Column("document_type")]
-        [StringLength(25)]
-        [Unicode(false)]
-        public string DocumentType { get; set; } = null!;
-        [Column("uploaded_at")]
-        public byte[] UploadedAt { get; set; } = null!;
-        [Column("task_id")]
-        public int TaskId { get; set; }
-        [Column("uploaded_by")]
         [StringLength(255)]
         [Unicode(false)]
-        public string? UploadedBy { get; set; }
+        public string DocumentType { get; set; } = null!;
 
-        [ForeignKey("TaskId")]
+        [ForeignKey("TaskTaskId")]
         [InverseProperty("Documents")]
-        public virtual Task Task { get; set; } = null!;
-        [ForeignKey("UploadedBy")]
-        [InverseProperty("Documents")]
-        public virtual User? UploadedByNavigation { get; set; }
+        public virtual Task TaskTask { get; set; } = null!;
     }
 }
