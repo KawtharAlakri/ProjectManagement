@@ -22,32 +22,31 @@ namespace ProjectManagement.Models
         [StringLength(255)]
         [Unicode(false)]
         public string ProjectName { get; set; } = null!;
-        [Column("start_date", TypeName = "date")]
-        public DateTime StartDate { get; set; }
-        [Column("end_date", TypeName = "date")]
-        public DateTime? EndDate { get; set; }
+        [Column("created_at")]
+        public byte[] CreatedAt { get; set; } = null!;
+        [Column("due_date", TypeName = "date")]
+        public DateTime? DueDate { get; set; }
         [Column("budget", TypeName = "decimal(4, 2)")]
         public decimal? Budget { get; set; }
-        [Column("project_description", TypeName = "text")]
-        public string ProjectDescription { get; set; } = null!;
-        [Column("projectManager")]
+        [Column("description")]
+        [StringLength(400)]
+        [Unicode(false)]
+        public string? Description { get; set; }
+        [Column("project_manager")]
         [StringLength(255)]
         [Unicode(false)]
         public string ProjectManager { get; set; } = null!;
-        [Column("project_status")]
-        [StringLength(255)]
+        [Column("status")]
+        [StringLength(25)]
         [Unicode(false)]
-        public string ProjectStatus { get; set; } = null!;
+        public string Status { get; set; } = null!;
 
-        [ForeignKey("ProjectManager")]
+        [ForeignKey("Status")]
         [InverseProperty("Projects")]
-        public virtual User ProjectManagerNavigation { get; set; } = null!;
-        [ForeignKey("ProjectStatus")]
-        [InverseProperty("Projects")]
-        public virtual Status ProjectStatusNavigation { get; set; } = null!;
-        [InverseProperty("ProjectPriject")]
+        public virtual Status StatusNavigation { get; set; } = null!;
+        [InverseProperty("Project")]
         public virtual ICollection<Task> Tasks { get; set; }
-        [InverseProperty("ProjectPriject")]
+        [InverseProperty("Project")]
         public virtual ICollection<UserProject> UserProjects { get; set; }
     }
 }
