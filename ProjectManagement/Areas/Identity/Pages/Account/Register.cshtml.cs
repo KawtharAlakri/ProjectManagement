@@ -33,13 +33,16 @@ namespace ProjectManagement.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<IdentityUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        private readonly ProjectManagementContext _projectManagementContext;
+
 
         public RegisterModel(
             UserManager<IdentityUser> userManager,
             IUserStore<IdentityUser> userStore,
             SignInManager<IdentityUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            ProjectManagementContext projectManagementContext)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -47,6 +50,7 @@ namespace ProjectManagement.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _projectManagementContext = projectManagementContext;
         }
 
         /// <summary>
@@ -124,7 +128,16 @@ namespace ProjectManagement.Areas.Identity.Pages.Account
 
                 if (result.Succeeded)
                 {
-                   
+                    // Create a new instance of your "User" model
+                    var customUser = new User
+                    {
+                        Username = Input.Email
+                    };
+
+                    // Add the new "User" instance to the dbContext and save changes
+                    _projectManagementContext.Users.Add(customUser);
+                    await _projectManagementContext.SaveChangesAsync();
+
                     _logger.LogInformation("User created a new account with password.");
 
                     var userId = await _userManager.GetUserIdAsync(user);
