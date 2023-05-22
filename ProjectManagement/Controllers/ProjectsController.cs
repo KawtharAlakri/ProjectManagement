@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Packaging.Signing;
 using ProjectManagement.Models;
 
 namespace ProjectManagement.Controllers
@@ -58,6 +59,11 @@ namespace ProjectManagement.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("ProjectId,ProjectName,CreatedAt,DueDate,Budget,Description,ProjectManager,Status")] Project project)
         {
+            //set automatic values 
+            project.CreatedAt = DateTime.Now;
+            project.ProjectManager = User.Identity.Name;
+            project.Status = ;
+
             if (ModelState.IsValid)
             {
                 _context.Add(project);

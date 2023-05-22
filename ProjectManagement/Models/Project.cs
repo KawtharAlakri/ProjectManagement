@@ -21,10 +21,13 @@ namespace ProjectManagement.Models
         [Column("project_name")]
         [StringLength(255)]
         [Unicode(false)]
+        [Display (Name ="Project Name")]
         public string ProjectName { get; set; } = null!;
-        [Column("created_at")]
-        public byte[] CreatedAt { get; set; } = null!;
+        [Column("created_at", TypeName = "date")]
+        [Display(Name = "Created at")]
+        public DateTime CreatedAt { get; set; }
         [Column("due_date", TypeName = "date")]
+        [Display(Name = "Due Date")]
         public DateTime? DueDate { get; set; }
         [Column("budget", TypeName = "decimal(4, 2)")]
         public decimal? Budget { get; set; }
@@ -35,6 +38,7 @@ namespace ProjectManagement.Models
         [Column("project_manager")]
         [StringLength(255)]
         [Unicode(false)]
+        [Display(Name = "Project Manager")]
         public string ProjectManager { get; set; } = null!;
         [Column("status")]
         [StringLength(25)]
@@ -43,6 +47,7 @@ namespace ProjectManagement.Models
 
         [ForeignKey("Status")]
         [InverseProperty("Projects")]
+        [Display(Name = "Status")]
         public virtual Status StatusNavigation { get; set; } = null!;
         [InverseProperty("Project")]
         public virtual ICollection<Task> Tasks { get; set; }

@@ -26,8 +26,8 @@ namespace ProjectManagement.Models
         [StringLength(255)]
         [Unicode(false)]
         public string TaskName { get; set; } = null!;
-        [Column("created_at")]
-        public byte[] CreatedAt { get; set; } = null!;
+        [Column("created_at", TypeName = "date")]
+        public DateTime CreatedAt { get; set; }
         [Column("due_date", TypeName = "date")]
         public DateTime? DueDate { get; set; }
         [Column("project_id")]
