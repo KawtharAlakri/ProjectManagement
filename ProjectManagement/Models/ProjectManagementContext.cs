@@ -16,12 +16,6 @@ namespace ProjectManagement.Models
         {
         }
 
-        public virtual DbSet<AspNetRole> AspNetRoles { get; set; } = null!;
-        public virtual DbSet<AspNetRoleClaim> AspNetRoleClaims { get; set; } = null!;
-        public virtual DbSet<AspNetUser> AspNetUsers { get; set; } = null!;
-        public virtual DbSet<AspNetUserClaim> AspNetUserClaims { get; set; } = null!;
-        public virtual DbSet<AspNetUserLogin> AspNetUserLogins { get; set; } = null!;
-        public virtual DbSet<AspNetUserToken> AspNetUserTokens { get; set; } = null!;
         public virtual DbSet<Comment> Comments { get; set; } = null!;
         public virtual DbSet<Document> Documents { get; set; } = null!;
         public virtual DbSet<Log> Logs { get; set; } = null!;
@@ -34,169 +28,124 @@ namespace ProjectManagement.Models
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<AspNetRole>(entity =>
-            {
-                entity.HasIndex(e => e.NormalizedName, "RoleNameIndex")
-                    .IsUnique()
-                    .HasFilter("([NormalizedName] IS NOT NULL)");
-            });
-
-            modelBuilder.Entity<AspNetUser>(entity =>
-            {
-                entity.HasIndex(e => e.NormalizedUserName, "UserNameIndex")
-                    .IsUnique()
-                    .HasFilter("([NormalizedUserName] IS NOT NULL)");
-
-                entity.Property(e => e.Discriminator).HasDefaultValueSql("(N'')");
-
-                entity.HasMany(d => d.Roles)
-                    .WithMany(p => p.Users)
-                    .UsingEntity<Dictionary<string, object>>(
-                        "AspNetUserRole",
-                        l => l.HasOne<AspNetRole>().WithMany().HasForeignKey("RoleId"),
-                        r => r.HasOne<AspNetUser>().WithMany().HasForeignKey("UserId"),
-                        j =>
-                        {
-                            j.HasKey("UserId", "RoleId");
-
-                            j.ToTable("AspNetUserRoles");
-
-                            j.HasIndex(new[] { "RoleId" }, "IX_AspNetUserRoles_RoleId");
-                        });
-            });
-
-            modelBuilder.Entity<AspNetUserLogin>(entity =>
-            {
-                entity.HasKey(e => new { e.LoginProvider, e.ProviderKey });
-            });
-
-            modelBuilder.Entity<AspNetUserToken>(entity =>
-            {
-                entity.HasKey(e => new { e.UserId, e.LoginProvider, e.Name });
-            });
-
             modelBuilder.Entity<Comment>(entity =>
             {
-                entity.Property(e => e.CommentId).ValueGeneratedNever();
+                entity.Property(e => e.PostedAt)
+                    .IsRowVersion()
+                    .IsConcurrencyToken();
 
                 entity.HasOne(d => d.Author)
                     .WithMany(p => p.Comments)
                     .HasForeignKey(d => d.AuthorId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("Comment_User");
+                    .HasConstraintName("FK_Comment_User");
 
                 entity.HasOne(d => d.Task)
                     .WithMany(p => p.Comments)
                     .HasForeignKey(d => d.TaskId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("Comment_Task");
+                    .HasConstraintName("FK_Comment_Task");
             });
 
             modelBuilder.Entity<Document>(entity =>
             {
-                entity.Property(e => e.DocumentId).ValueGeneratedNever();
+                entity.Property(e => e.UploadedAt)
+                    .IsRowVersion()
+                    .IsConcurrencyToken();
 
-                entity.HasOne(d => d.TaskTask)
+                entity.HasOne(d => d.Task)
                     .WithMany(p => p.Documents)
-                    .HasForeignKey(d => d.TaskTaskId)
+                    .HasForeignKey(d => d.TaskId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("Document_Task");
+                    .HasConstraintName("FK_Document_Task");
+
+                entity.HasOne(d => d.UploadedByNavigation)
+                    .WithMany(p => p.Documents)
+                    .HasForeignKey(d => d.UploadedBy)
+                    .HasConstraintName("FK_Document_User");
             });
 
             modelBuilder.Entity<Log>(entity =>
             {
-                entity.Property(e => e.LogId).ValueGeneratedNever();
+                entity.Property(e => e.LogTimestamp)
+                    .IsRowVersion()
+                    .IsConcurrencyToken();
 
-                entity.HasOne(d => d.UserUsernameNavigation)
+                entity.HasOne(d => d.UsernameNavigation)
                     .WithMany(p => p.Logs)
-                    .HasForeignKey(d => d.UserUsername)
+                    .HasForeignKey(d => d.Username)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("Log_User");
+                    .HasConstraintName("FK_Log_User");
             });
 
             modelBuilder.Entity<Notification>(entity =>
             {
-                entity.Property(e => e.NotificationId).ValueGeneratedNever();
+                entity.Property(e => e.GeneratedAt)
+                    .IsRowVersion()
+                    .IsConcurrencyToken();
 
-                entity.HasOne(d => d.UserUsernameNavigation)
+                entity.HasOne(d => d.RecipientNavigation)
                     .WithMany(p => p.Notifications)
-                    .HasForeignKey(d => d.UserUsername)
+                    .HasForeignKey(d => d.Recipient)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("Notification_User");
+                    .HasConstraintName("FK_Notification_User");
             });
 
             modelBuilder.Entity<Project>(entity =>
             {
-                entity.Property(e => e.ProjectId).ValueGeneratedNever();
+                entity.Property(e => e.CreatedAt)
+                    .IsRowVersion()
+                    .IsConcurrencyToken();
 
-                entity.HasOne(d => d.ProjectManagerNavigation)
+                entity.HasOne(d => d.StatusNavigation)
                     .WithMany(p => p.Projects)
-                    .HasForeignKey(d => d.ProjectManager)
+                    .HasForeignKey(d => d.Status)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("Project_User");
-
-                entity.HasOne(d => d.ProjectStatusNavigation)
-                    .WithMany(p => p.Projects)
-                    .HasForeignKey(d => d.ProjectStatus)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("Project_Status");
-            });
-
-            modelBuilder.Entity<Status>(entity =>
-            {
-                entity.HasKey(e => e.StatusName)
-                    .HasName("Status_pk");
+                    .HasConstraintName("FK_Project_Status");
             });
 
             modelBuilder.Entity<Task>(entity =>
             {
-                entity.Property(e => e.TaskId).ValueGeneratedNever();
+                entity.Property(e => e.CreatedAt)
+                    .IsRowVersion()
+                    .IsConcurrencyToken();
 
                 entity.HasOne(d => d.AssignedToNavigation)
                     .WithMany(p => p.Tasks)
                     .HasForeignKey(d => d.AssignedTo)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("Task_User");
+                    .HasConstraintName("FK_Task_User");
 
-                entity.HasOne(d => d.ProjectPriject)
+                entity.HasOne(d => d.Project)
                     .WithMany(p => p.Tasks)
-                    .HasForeignKey(d => d.ProjectPrijectId)
+                    .HasForeignKey(d => d.ProjectId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("Task_Project");
+                    .HasConstraintName("FK_Task_Project");
 
-                entity.HasOne(d => d.TaskStatusNavigation)
+                entity.HasOne(d => d.StatusNavigation)
                     .WithMany(p => p.Tasks)
-                    .HasForeignKey(d => d.TaskStatus)
+                    .HasForeignKey(d => d.Status)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("Task_Status");
-            });
-
-            modelBuilder.Entity<User>(entity =>
-            {
-                entity.HasKey(e => e.Username)
-                    .HasName("User_pk");
+                    .HasConstraintName("FK_Task_Status");
             });
 
             modelBuilder.Entity<UserProject>(entity =>
             {
-                entity.Property(e => e.UserProjectId).ValueGeneratedNever();
-
-                entity.HasOne(d => d.ProjectPriject)
+                entity.HasOne(d => d.Project)
                     .WithMany(p => p.UserProjects)
-                    .HasForeignKey(d => d.ProjectPrijectId)
+                    .HasForeignKey(d => d.ProjectId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("UserProject_Project");
+                    .HasConstraintName("FK_UserProject_Project");
 
-                entity.HasOne(d => d.UserUsernameNavigation)
+                entity.HasOne(d => d.UsernameNavigation)
                     .WithMany(p => p.UserProjects)
-                    .HasForeignKey(d => d.UserUsername)
+                    .HasForeignKey(d => d.Username)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("UserProject_User");
+                    .HasConstraintName("FK_UserProject_User");
             });
 
             OnModelCreatingPartial(modelBuilder);
