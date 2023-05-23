@@ -22,8 +22,8 @@ namespace ProjectManagement.Models
         public string Recipient { get; set; } = null!;
         [Column("is_read")]
         public bool IsRead { get; set; }
-        [Column("generated_at")]
-        public byte[] GeneratedAt { get; set; } = null!;
+        [Column("generated_at", TypeName = "datetime")]
+        public DateTime GeneratedAt { get; set; }
 
         [ForeignKey("Recipient")]
         [InverseProperty("Notifications")]

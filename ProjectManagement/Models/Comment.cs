@@ -16,8 +16,8 @@ namespace ProjectManagement.Models
         [StringLength(255)]
         [Unicode(false)]
         public string CommentText { get; set; } = null!;
-        [Column("posted_at")]
-        public byte[] PostedAt { get; set; } = null!;
+        [Column("posted_at", TypeName = "date")]
+        public DateTime PostedAt { get; set; }
         [Column("task_id")]
         public int TaskId { get; set; }
         [Column("author_id")]

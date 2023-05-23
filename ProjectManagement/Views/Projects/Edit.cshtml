@@ -20,6 +20,11 @@
                 <span asp-validation-for="ProjectName" class="text-danger"></span>
             </div>
             <div class="form-group">
+                <label asp-for="CreatedAt" class="control-label"></label>
+                <input asp-for="CreatedAt" class="form-control" />
+                <span asp-validation-for="CreatedAt" class="text-danger"></span>
+            </div>
+            <div class="form-group">
                 <label asp-for="DueDate" class="control-label"></label>
                 <input asp-for="DueDate" class="form-control" />
                 <span asp-validation-for="DueDate" class="text-danger"></span>
@@ -36,7 +41,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="ProjectManager" class="control-label"></label>
-                <input asp-for="ProjectManager" class="form-control" />
+                <select asp-for="ProjectManager" class="form-control" asp-items="ViewBag.ProjectManager"></select>
                 <span asp-validation-for="ProjectManager" class="text-danger"></span>
             </div>
             <div class="form-group">

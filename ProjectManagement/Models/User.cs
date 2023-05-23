@@ -15,6 +15,7 @@ namespace ProjectManagement.Models
             Documents = new HashSet<Document>();
             Logs = new HashSet<Log>();
             Notifications = new HashSet<Notification>();
+            Projects = new HashSet<Project>();
             Tasks = new HashSet<Task>();
             UserProjects = new HashSet<UserProject>();
         }
@@ -33,6 +34,8 @@ namespace ProjectManagement.Models
         public virtual ICollection<Log> Logs { get; set; }
         [InverseProperty("RecipientNavigation")]
         public virtual ICollection<Notification> Notifications { get; set; }
+        [InverseProperty("ProjectManagerNavigation")]
+        public virtual ICollection<Project> Projects { get; set; }
         [InverseProperty("AssignedToNavigation")]
         public virtual ICollection<Task> Tasks { get; set; }
         [InverseProperty("UsernameNavigation")]
