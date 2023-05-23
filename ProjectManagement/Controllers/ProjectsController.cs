@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using NuGet.Packaging.Signing;
 using ProjectManagement.Models;
+using ProjectManagement.ViewModels;
 
 namespace ProjectManagement.Controllers
 {
@@ -22,7 +22,7 @@ namespace ProjectManagement.Controllers
         // GET: Projects
         public async Task<IActionResult> Index()
         {
-            var projectManagementContext = _context.Projects.Include(p => p.StatusNavigation);
+            var projectManagementContext = _context.Projects.Include(p => p.ProjectManagerNavigation).Include(p => p.StatusNavigation);
             return View(await projectManagementContext.ToListAsync());
         }
 
@@ -35,6 +35,7 @@ namespace ProjectManagement.Controllers
             }
 
             var project = await _context.Projects
+                .Include(p => p.ProjectManagerNavigation)
                 .Include(p => p.StatusNavigation)
                 .FirstOrDefaultAsync(m => m.ProjectId == id);
             if (project == null)
@@ -48,7 +49,7 @@ namespace ProjectManagement.Controllers
         // GET: Projects/Create
         public IActionResult Create()
         {
-            ViewData["Status"] = new SelectList(_context.Statuses, "StatusName", "StatusName");
+            ViewBag.Users = new SelectList(_context.Users, "Username", "Username");
             return View();
         }
 
@@ -57,22 +58,48 @@ namespace ProjectManagement.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ProjectId,ProjectName,CreatedAt,DueDate,Budget,Description,ProjectManager,Status")] Project project)
+        public async Task<IActionResult> Create(ProjectUsersVM viewModel)
         {
-            //set automatic values 
+            // Create the project
+            Project project = viewModel.project;
             project.CreatedAt = DateTime.Now;
+            project.ProjectManagerNavigation = _context.Users.Where(x => x.Username == User.Identity.Name).FirstOrDefault();
             project.ProjectManager = User.Identity.Name;
-            project.Status = ;
+            project.Status = _context.Statuses.FirstOrDefault(s => s.StatusName == "in progress")?.StatusName;
+            project.StatusNavigation = _context.Statuses.FirstOrDefault(s => s.StatusName == "in progress");
 
+            ModelState.Clear();
+            TryValidateModel(project);
             if (ModelState.IsValid)
             {
-                _context.Add(project);
+                _context.Projects.Add(project);
                 await _context.SaveChangesAsync();
+
+                // Add users to the UserProject table
+                if (viewModel.selectedUsers != null && viewModel.selectedUsers.Count() > 0)
+                {
+                    foreach (string username in viewModel.selectedUsers)
+                    {
+                        User user = _context.Users.FirstOrDefault(u => u.Username == username);
+                        if (user != null)
+                        {
+                            UserProject userProject = new UserProject
+                            {
+                                ProjectId = project.ProjectId,
+                                Username = user.Username
+                            };
+                            _context.UserProjects.Add(userProject);
+                        }
+                    }
+                    await _context.SaveChangesAsync();
+                }
+
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["Status"] = new SelectList(_context.Statuses, "StatusName", "StatusName", project.Status);
-            return View(project);
+
+            return View(viewModel);
         }
+
 
         // GET: Projects/Edit/5
         public async Task<IActionResult> Edit(int? id)
@@ -87,6 +114,7 @@ namespace ProjectManagement.Controllers
             {
                 return NotFound();
             }
+            ViewData["ProjectManager"] = new SelectList(_context.Users, "Username", "Username", project.ProjectManager);
             ViewData["Status"] = new SelectList(_context.Statuses, "StatusName", "StatusName", project.Status);
             return View(project);
         }
@@ -123,6 +151,7 @@ namespace ProjectManagement.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
+            ViewData["ProjectManager"] = new SelectList(_context.Users, "Username", "Username", project.ProjectManager);
             ViewData["Status"] = new SelectList(_context.Statuses, "StatusName", "StatusName", project.Status);
             return View(project);
         }
@@ -136,6 +165,7 @@ namespace ProjectManagement.Controllers
             }
 
             var project = await _context.Projects
+                .Include(p => p.ProjectManagerNavigation)
                 .Include(p => p.StatusNavigation)
                 .FirstOrDefaultAsync(m => m.ProjectId == id);
             if (project == null)

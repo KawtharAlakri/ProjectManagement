@@ -34,6 +34,7 @@ namespace ProjectManagement.Models
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+           
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -128,6 +129,12 @@ namespace ProjectManagement.Models
 
             modelBuilder.Entity<Project>(entity =>
             {
+                entity.HasOne(d => d.ProjectManagerNavigation)
+                    .WithMany(p => p.Projects)
+                    .HasForeignKey(d => d.ProjectManager)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Project_User");
+
                 entity.HasOne(d => d.StatusNavigation)
                     .WithMany(p => p.Projects)
                     .HasForeignKey(d => d.Status)
