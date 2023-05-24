@@ -2,14 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Models;
 using ProjectManagement.ViewModels;
 
 namespace ProjectManagement.Controllers
 {
+    [Authorize]
     public class ProjectsController : Controller
     {
         private readonly ProjectManagementContext _context;
@@ -22,13 +25,36 @@ namespace ProjectManagement.Controllers
         // GET: Projects
         public async Task<IActionResult> Index()
         {
-            var projectManagementContext = _context.Projects.Include(p => p.ProjectManagerNavigation).Include(p => p.StatusNavigation);
-            return View(await projectManagementContext.ToListAsync());
+            //projects where user is manager 
+            var projectManagementContext = _context.Projects.Include(p => p.ProjectManagerNavigation).Include(p => p.StatusNavigation).Where(x => x.ProjectManager == User.Identity.Name);
+
+            //projects where user is member 
+            var projectsForMember = from project in _context.Projects
+                                    join userProject in _context.UserProjects
+                                    on project.ProjectId equals userProject.ProjectId
+                                    where userProject.Username == User.Identity.Name
+                                    select project;
+
+            // Add Include for related entities in the second query
+            projectsForMember = projectsForMember
+                .Include(p => p.ProjectManagerNavigation)
+                .Include(p => p.StatusNavigation);
+
+            //combine both queries
+            var combinedProjects = projectManagementContext.Concat(projectsForMember);
+
+
+            //var x = _context.UserProjects.Where(p => p.Username == User.Identity.Name);
+
+            //var context = _context.Projects.Where(u => u.UserProjects.Any(x => x.Username == User.Identity.Name));
+            return View(await combinedProjects.ToListAsync());
+
         }
 
         // GET: Projects/Details/5
         public async Task<IActionResult> Details(int? id)
         {
+            
             if (id == null || _context.Projects == null)
             {
                 return NotFound();
@@ -42,8 +68,15 @@ namespace ProjectManagement.Controllers
             {
                 return NotFound();
             }
+            var userProjects = _context.UserProjects.Where(x => x.ProjectId == project.ProjectId);
+            List<string> selectedUsers = new List<string>();
+            foreach (UserProject userProject in userProjects)
+            {
+                selectedUsers.Add(userProject.Username);
+            }
+            ProjectUsersVM vm = new ProjectUsersVM { project = project, selectedUsers = selectedUsers};
 
-            return View(project);
+            return View(vm);
         }
 
         // GET: Projects/Create
@@ -114,9 +147,16 @@ namespace ProjectManagement.Controllers
             {
                 return NotFound();
             }
-            ViewData["ProjectManager"] = new SelectList(_context.Users, "Username", "Username", project.ProjectManager);
+            var userProjects = _context.UserProjects.Where(x => x.ProjectId == project.ProjectId);
+            List<string> selectedUsers = new List<string>();
+            foreach (UserProject userProject in userProjects)
+            {
+                selectedUsers.Add(userProject.Username);
+            }
+            ProjectUsersVM vm = new ProjectUsersVM { project = project,selectedUsers = selectedUsers, allUsers = _context.Users };
             ViewData["Status"] = new SelectList(_context.Statuses, "StatusName", "StatusName", project.Status);
-            return View(project);
+
+            return View(vm);
         }
 
         // POST: Projects/Edit/5
@@ -124,23 +164,54 @@ namespace ProjectManagement.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ProjectId,ProjectName,CreatedAt,DueDate,Budget,Description,ProjectManager,Status")] Project project)
+        public async Task<IActionResult> Edit(ProjectUsersVM viewModel)
         {
-            if (id != project.ProjectId)
-            {
-                return NotFound();
-            }
+            viewModel.allUsers = _context.Users;
+            viewModel.project.ProjectManagerNavigation = _context.Users.Where(x => x.Username == viewModel.project.ProjectManager).FirstOrDefault();
+            viewModel.project.StatusNavigation = _context.Statuses.Where(x => x.StatusName == viewModel.project.Status).FirstOrDefault();
+
+            ModelState.Clear();
+            TryValidateModel(viewModel);
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _context.Update(project);
+                    // close the existing DataReader
+                    await _context.Database.CloseConnectionAsync();
+
+                    /// update the project
+                    _context.Update(viewModel.project);
                     await _context.SaveChangesAsync();
+
+                    
+
+                    //update project members (remove all and insert again) ? 
+                    var records = _context.UserProjects.Where(p => p.ProjectId == viewModel.project.ProjectId);
+                    _context.UserProjects.RemoveRange(records);
+                    //insert 
+                    if (viewModel.selectedUsers != null && viewModel.selectedUsers.Count() > 0)
+                    {
+                        foreach (string username in viewModel.selectedUsers)
+                        {
+                            User user = _context.Users.FirstOrDefault(u => u.Username == username);
+                            if (user != null)
+                            {
+                                UserProject userProject = new UserProject
+                                {
+                                    ProjectId = viewModel.project.ProjectId,
+                                    Username = user.Username
+                                };
+                                _context.UserProjects.Add(userProject);
+                            }
+                        }
+                        await _context.SaveChangesAsync();
+                    }
+
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ProjectExists(project.ProjectId))
+                    if (!ProjectExists(viewModel.project.ProjectId))
                     {
                         return NotFound();
                     }
@@ -151,9 +222,8 @@ namespace ProjectManagement.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["ProjectManager"] = new SelectList(_context.Users, "Username", "Username", project.ProjectManager);
-            ViewData["Status"] = new SelectList(_context.Statuses, "StatusName", "StatusName", project.Status);
-            return View(project);
+            ViewData["Status"] = new SelectList(_context.Statuses, "StatusName", "StatusName", viewModel.project.Status);
+            return View(viewModel);
         }
 
         // GET: Projects/Delete/5

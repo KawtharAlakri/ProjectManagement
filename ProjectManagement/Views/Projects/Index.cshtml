@@ -77,10 +77,18 @@
                     @Html.DisplayFor(modelItem => item.StatusNavigation.StatusName)
                 </td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@item.ProjectId">Edit</a> |
-                    <a asp-action="Details" asp-route-id="@item.ProjectId">Details</a> |
-                    <a asp-action="Delete" asp-route-id="@item.ProjectId">Delete</a>
+                    @if (item.ProjectManager == User.Identity.Name)
+                    {
+                        <a asp-action="Details" asp-route-id="@item.ProjectId"> Details </a>  <text>|</text>
+                        <a asp-action="Edit" asp-route-id="@item.ProjectId">Edit</a> <text>|</text>
+                        <a asp-action="Delete" asp-route-id="@item.ProjectId"> Delete </a> 
+                    }
+                    else
+                    {
+                        <a asp-action="Details" asp-route-id="@item.ProjectId">Details</a>
+                    }
                 </td>
+
             </tr>
         }
     </tbody>
