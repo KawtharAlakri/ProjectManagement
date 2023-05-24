@@ -25,7 +25,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="@Model.project.Budget" class="control-label"></label>
-                <input asp-for="@Model.project.Budget" class="form-control" />
+                <input asp-for="@Model.project.Budget" class="form-control"/>
                 <span asp-validation-for="@Model.project.Budget" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -34,7 +34,7 @@
                 <span asp-validation-for="@Model.project.Description" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="selectedUsers" class="control-label">Users</label>
+                <label asp-for="selectedUsers" class="control-label">Project Members</label>
                 <select asp-for="selectedUsers" asp-items="ViewBag.Users" class="form-control" multiple></select>
                 <span asp-validation-for="selectedUsers" class="text-danger"></span>
             </div>
