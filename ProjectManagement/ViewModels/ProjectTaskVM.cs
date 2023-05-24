@@ -2,10 +2,10 @@
 
 namespace ProjectManagement.ViewModels
 {
-    public class ProjectUsersVM
+    public class ProjectTaskVM
     {
-        public Project project { get; set; }
+        public Models.Task task { get; set; }
         public List<string> selectedUsers { get; set; }
-        public IEnumerable<User> allUsers { get; set; }
+        public Project project { get; set; } 
     }
 }
