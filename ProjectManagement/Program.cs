@@ -2,6 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Models;
 using Microsoft.AspNetCore.Identity;
 using ProjectManagement.Data;
+using ProjectManagement.Areas.Identity.Data;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +18,7 @@ builder.Services.AddDbContext<IdentityContext>(options => options.UseSqlServer(
     builder.Configuration.GetConnectionString("IdentityContextConnection")));
 
 builder.Services.AddDefaultIdentity<IdentityUser>()
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<IdentityContext>();
 
 var app = builder.Build();
