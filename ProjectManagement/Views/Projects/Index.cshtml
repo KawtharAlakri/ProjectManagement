@@ -6,7 +6,7 @@
 }
 
 <h1>Index</h1>
-
+<p style="color:darkred">@TempData["ErrorMessage"]</p>
 <p>
     <a asp-action="Create">Create New</a>
 </p>
@@ -87,6 +87,7 @@
                     {
                         <a asp-action="Details" asp-route-id="@item.ProjectId">Details</a>
                     }
+                    <text>|</text> <a asp-controller="Tasks" asp-action="Index" asp-route-id="@item.ProjectId">Tasks</a>
                 </td>
 
             </tr>

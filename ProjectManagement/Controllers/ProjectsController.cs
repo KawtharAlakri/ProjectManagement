@@ -26,7 +26,7 @@ namespace ProjectManagement.Controllers
         public async Task<IActionResult> Index()
         {
             //projects where user is manager 
-            var projectManagementContext = _context.Projects.Include(p => p.ProjectManagerNavigation).Include(p => p.StatusNavigation).Where(x => x.ProjectManager == User.Identity.Name);
+            var ManagerProjects = _context.Projects.Include(p => p.ProjectManagerNavigation).Include(p => p.StatusNavigation).Where(x => x.ProjectManager == User.Identity.Name);
 
             //projects where user is member 
             var projectsForMember = from project in _context.Projects
@@ -41,12 +41,8 @@ namespace ProjectManagement.Controllers
                 .Include(p => p.StatusNavigation);
 
             //combine both queries
-            var combinedProjects = projectManagementContext.Concat(projectsForMember);
+            var combinedProjects = ManagerProjects.Concat(projectsForMember);
 
-
-            //var x = _context.UserProjects.Where(p => p.Username == User.Identity.Name);
-
-            //var context = _context.Projects.Where(u => u.UserProjects.Any(x => x.Username == User.Identity.Name));
             return View(await combinedProjects.ToListAsync());
 
         }
@@ -62,11 +58,18 @@ namespace ProjectManagement.Controllers
 
             var project = await _context.Projects
                 .Include(p => p.ProjectManagerNavigation)
-                .Include(p => p.StatusNavigation)
+                .Include(p => p.StatusNavigation).Include(p=>p.Tasks).Include(p=>p.UserProjects)
                 .FirstOrDefaultAsync(m => m.ProjectId == id);
             if (project == null)
             {
                 return NotFound();
+            }
+
+            var isMember = _context.UserProjects.Any(p => p.Project == project && p.Username == User.Identity.Name);
+             if (project.ProjectManager != User.Identity.Name && !isMember)
+            {
+                TempData["ErrorMessage"] = "You do not have permission to view this project.";
+                return RedirectToAction(nameof(Index));
             }
             var userProjects = _context.UserProjects.Where(x => x.ProjectId == project.ProjectId);
             List<string> selectedUsers = new List<string>();
@@ -147,6 +150,12 @@ namespace ProjectManagement.Controllers
             {
                 return NotFound();
             }
+            if (project.ProjectManager != User.Identity.Name)
+            {
+                TempData["ErrorMessage"] = "You do not have permission to edit this project.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var userProjects = _context.UserProjects.Where(x => x.ProjectId == project.ProjectId);
             List<string> selectedUsers = new List<string>();
             foreach (UserProject userProject in userProjects)
@@ -233,6 +242,7 @@ namespace ProjectManagement.Controllers
             {
                 return NotFound();
             }
+            
 
             var project = await _context.Projects
                 .Include(p => p.ProjectManagerNavigation)
@@ -241,6 +251,11 @@ namespace ProjectManagement.Controllers
             if (project == null)
             {
                 return NotFound();
+            }
+            if (project.ProjectManager != User.Identity.Name)
+            {
+                TempData["ErrorMessage"] = "You do not have permission to delete this project.";
+                return RedirectToAction(nameof(Index));
             }
 
             return View(project);
@@ -255,13 +270,24 @@ namespace ProjectManagement.Controllers
             {
                 return Problem("Entity set 'ProjectManagementContext.Projects'  is null.");
             }
-            var project = await _context.Projects.FindAsync(id);
+            var project = await _context.Projects
+            .Include(p => p.Tasks).Include(p=>p.UserProjects)  
+            .SingleOrDefaultAsync(p => p.ProjectId == id);
             if (project != null)
             {
+                //delete userProjects records 
+                _context.RemoveRange(project.UserProjects);
+                await _context.SaveChangesAsync();
+
+                //remove project tasks
+                _context.RemoveRange(project.Tasks);
+                await _context.SaveChangesAsync();
+
+                //delete the project itself 
                 _context.Projects.Remove(project);
+                await _context.SaveChangesAsync();
             }
-            
-            await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
 
