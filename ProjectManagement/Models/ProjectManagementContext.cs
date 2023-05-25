@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using ProjectManagement.Areas.Identity.Data;
 
 namespace ProjectManagement.Models
 {
