@@ -10,6 +10,19 @@
 <p>
     <a asp-action="Create">Create New</a>
 </p>
+<form asp-action="Index" asp-controller="Projects" method="get">
+    <input type="text" name="searchString" placeholder="Search by project name.." value="@ViewBag.searchString" />
+    <label>Projects where I am:</label>
+    <input type="radio" name="filterBy" value="member" @(ViewBag.filterBy == "member" ? "checked" : "") />
+    <label for="filterMember">Member</label>
+    <input type="radio" name="filterBy" value="manager" @(ViewBag.filterBy == "manager" ? "checked" : "") />
+    <label for="filterManager">Manager</label>
+    <label> Status </label>
+    <select name="statusFilter" asp-items="ViewBag.Status"></select>
+    <input type="submit" value="Filter"/>
+    <a asp-action="Index" asp-controller="Projects">Clear</a>
+</form>
+
 <table class="table">
     <thead>
         <tr>

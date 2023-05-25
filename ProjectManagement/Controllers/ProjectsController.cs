@@ -23,27 +23,40 @@ namespace ProjectManagement.Controllers
         }
 
         // GET: Projects
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString, string filterBy, string statusFilter)
         {
-            //projects where user is manager 
-            var ManagerProjects = _context.Projects.Include(p => p.ProjectManagerNavigation).Include(p => p.StatusNavigation).Where(x => x.ProjectManager == User.Identity.Name);
+            //get the full project context with projects that user is manager of or a member in 
+            IQueryable<Project> fullProjectsContext = _context.Projects
+                                   .Include(p => p.ProjectManagerNavigation)
+                                   .Include(p => p.StatusNavigation)
+                                   .Include(p => p.UserProjects)
+                                   .Where(p => p.UserProjects.Any(up => up.Username == User.Identity.Name) || p.ProjectManager == User.Identity.Name);
+            
+            //aplly any search or filter 
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                fullProjectsContext = fullProjectsContext.Where(p => p.ProjectName.Contains(searchString));
+            }
+            if (filterBy == "member")
+            {
+                fullProjectsContext = fullProjectsContext.Where(p => p.UserProjects.Any(up => up.Username == User.Identity.Name));
+            }
+            else if (filterBy == "manager")
+            {
+                fullProjectsContext = fullProjectsContext.Where(p=>p.ProjectManager == User.Identity.Name);
 
-            //projects where user is member 
-            var projectsForMember = from project in _context.Projects
-                                    join userProject in _context.UserProjects
-                                    on project.ProjectId equals userProject.ProjectId
-                                    where userProject.Username == User.Identity.Name
-                                    select project;
+            }
+            else if (!String.IsNullOrEmpty(statusFilter))
+            {
+                fullProjectsContext = fullProjectsContext.Where(p => p.Status == statusFilter);
+            }
 
-            // Add Include for related entities in the second query
-            projectsForMember = projectsForMember
-                .Include(p => p.ProjectManagerNavigation)
-                .Include(p => p.StatusNavigation);
+            //pass filtering values in viewBag to keep it once results are shown 
+            ViewBag.searchString = searchString;
+            ViewBag.filterBy = filterBy;
+            ViewData["Status"] = new SelectList(_context.Statuses, "StatusName", "StatusName", statusFilter);
 
-            //combine both queries
-            var combinedProjects = ManagerProjects.Concat(projectsForMember);
-
-            return View(await combinedProjects.ToListAsync());
+            return View(await fullProjectsContext.ToListAsync());
 
         }
 
