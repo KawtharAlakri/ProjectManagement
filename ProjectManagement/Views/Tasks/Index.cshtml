@@ -6,15 +6,22 @@
 }
 
 <h1>Index</h1>
+@*restrict creating task to project manager *@
+@if (User.Identity.Name == ViewBag.project_manager)
+{
+    <p>
+        <a asp-action="Create" asp-route-id="@ViewBag.projectId">Create New</a>
+    </p>
+}
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
 <table class="table">
     <thead>
         <tr>
             <th>
                 @Html.DisplayNameFor(model => model.TaskName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Description)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.CreatedAt)
@@ -39,6 +46,9 @@
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.TaskName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Description)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.CreatedAt)

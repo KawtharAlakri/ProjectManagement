@@ -2,14 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using ProjectManagement.Models;
 using ProjectManagement.ViewModels;
 
 namespace ProjectManagement.Controllers
 {
+    [Authorize]
     public class TasksController : Controller
     {
         private readonly ProjectManagementContext _context;
@@ -20,9 +23,11 @@ namespace ProjectManagement.Controllers
         }
 
         // GET: Tasks
-        public async Task<IActionResult> Index(int? projectId)
+        public async Task<IActionResult> Index(int? id)
         {
-            var projectManagementContext = _context.Tasks.Include(t => t.AssignedToNavigation).Include(t => t.Project).Include(t => t.StatusNavigation).Where(x=> x.ProjectId == projectId);
+            var projectManagementContext = _context.Tasks.Include(t => t.AssignedToNavigation).Include(t => t.Project).Include(t => t.StatusNavigation).Where(x => x.ProjectId == id);
+            ViewBag.projectId = id;
+            ViewBag.project_manager = _context.Projects.Find(id).ProjectManager;
             return View(await projectManagementContext.ToListAsync());
         }
 
@@ -48,16 +53,16 @@ namespace ProjectManagement.Controllers
         }
 
         // GET: Tasks/Create
-        public IActionResult Create(int? projectId)
-        {
-            Project project = _context.Projects.Find(projectId);
-            List<string> projectMembers = new();
-            foreach (UserProject record in project.UserProjects)
+        public IActionResult Create(int? id)
+         {
+            Project project = _context.Projects.Find(id);
+            var userProjects = _context.UserProjects.Where(x => x.ProjectId == project.ProjectId);
+            List<string> projectMembers = new List<string>();
+            foreach (UserProject userProject in userProjects)
             {
-                projectMembers.Add(record.Username);
+                projectMembers.Add(userProject.Username);
             }
             ProjectTaskVM vm = new ProjectTaskVM { project = project, selectedUsers = projectMembers };
-             ViewData["Status"] = new SelectList(_context.Statuses, "StatusName", "StatusName");
             return View(vm);
         }
 
@@ -66,18 +71,40 @@ namespace ProjectManagement.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("TaskId,AssignedTo,TaskName,CreatedAt,DueDate,ProjectId,Status")] Models.Task task)
+        public async Task<IActionResult> Create(ProjectTaskVM vm)
         {
+            Models.Task task = vm.task;
+            vm.project = _context.Projects.Find(vm.project.ProjectId);
+            vm.project.ProjectManagerNavigation = _context.Users.Find(vm.project.ProjectManager);
+            vm.project.StatusNavigation = _context.Statuses.Find(vm.project.Status);
+            //vm.project = task.Project;
+            task.AssignedToNavigation = _context.Users.Find(vm.task.AssignedTo);
+            task.Status = _context.Statuses.Find("in progress").StatusName;
+            task.StatusNavigation = _context.Statuses.Find("in progress");
+            task.CreatedAt = DateTime.Now;
+            task.Project = vm.project;
+            task.ProjectId = vm.project.ProjectId;
+            ModelState.Clear();
+            TryValidateModel(task);
+
             if (ModelState.IsValid)
             {
+                //add task
                 _context.Add(task);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new {id = vm.project.ProjectId});
             }
-            ViewData["AssignedTo"] = new SelectList(_context.Users, "Username", "Username", task.AssignedTo);
-            ViewData["ProjectId"] = new SelectList(_context.Projects, "ProjectId", "ProjectId", task.ProjectId);
-            ViewData["Status"] = new SelectList(_context.Statuses, "StatusName", "StatusName", task.Status);
-            return View(task);
+
+            //populate projectMembers in case it will return the same page 
+            var userProjects = _context.UserProjects.Where(x => x.ProjectId == vm.project.ProjectId);
+            List<string> projectMembers = new List<string>();
+            foreach (UserProject userProject in userProjects)
+            {
+                projectMembers.Add(userProject.Username);
+            }
+            vm.selectedUsers = projectMembers;
+
+            return View(vm);
         }
 
         // GET: Tasks/Edit/5
@@ -104,7 +131,7 @@ namespace ProjectManagement.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("TaskId,AssignedTo,TaskName,CreatedAt,DueDate,ProjectId,Status")] Models.Task task)
+        public async Task<IActionResult> Edit(int id, [Bind("TaskId,AssignedTo,TaskName,Description,CreatedAt,DueDate,ProjectId,Status")] Models.Task task)
         {
             if (id != task.TaskId)
             {

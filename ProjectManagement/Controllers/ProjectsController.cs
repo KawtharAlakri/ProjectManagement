@@ -58,7 +58,7 @@ namespace ProjectManagement.Controllers
 
             var project = await _context.Projects
                 .Include(p => p.ProjectManagerNavigation)
-                .Include(p => p.StatusNavigation)
+                .Include(p => p.StatusNavigation).Include(p=>p.Tasks).Include(p=>p.UserProjects)
                 .FirstOrDefaultAsync(m => m.ProjectId == id);
             if (project == null)
             {
@@ -270,13 +270,24 @@ namespace ProjectManagement.Controllers
             {
                 return Problem("Entity set 'ProjectManagementContext.Projects'  is null.");
             }
-            var project = await _context.Projects.FindAsync(id);
+            var project = await _context.Projects
+            .Include(p => p.Tasks).Include(p=>p.UserProjects)  
+            .SingleOrDefaultAsync(p => p.ProjectId == id);
             if (project != null)
             {
+                //delete userProjects records 
+                _context.RemoveRange(project.UserProjects);
+                await _context.SaveChangesAsync();
+
+                //remove project tasks
+                _context.RemoveRange(project.Tasks);
+                await _context.SaveChangesAsync();
+
+                //delete the project itself 
                 _context.Projects.Remove(project);
+                await _context.SaveChangesAsync();
             }
-            
-            await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
 

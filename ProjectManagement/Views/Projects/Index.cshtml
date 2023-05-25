@@ -80,7 +80,6 @@
                     @if (item.ProjectManager == User.Identity.Name)
                     {
                         <a asp-action="Details" asp-route-id="@item.ProjectId"> Details </a>  <text>|</text>
-                        <a asp-controller="Tasks" asp-action="Index" asp-route-id="@item.ProjectId">Tasks</a> <text>|</text>
                         <a asp-action="Edit" asp-route-id="@item.ProjectId">Edit</a> <text>|</text>
                         <a asp-action="Delete" asp-route-id="@item.ProjectId"> Delete </a> 
                     }
@@ -88,6 +87,7 @@
                     {
                         <a asp-action="Details" asp-route-id="@item.ProjectId">Details</a>
                     }
+                    <text>|</text> <a asp-controller="Tasks" asp-action="Index" asp-route-id="@item.ProjectId">Tasks</a>
                 </td>
 
             </tr>

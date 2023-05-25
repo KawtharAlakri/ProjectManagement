@@ -56,9 +56,9 @@
         <dt class="col-sm-2">
            Project Members
         </dt>
-        @foreach (string username in Model.selectedUsers) {
+        @foreach (UserProject member in Model.project.UserProjects) {
         <dd class="col-sm-10">
-                @username
+                @member.Username
         </dd>
         }
     </dl>
