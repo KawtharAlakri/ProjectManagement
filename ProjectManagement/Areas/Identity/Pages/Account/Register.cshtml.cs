@@ -115,8 +115,8 @@ namespace ProjectManagement.Areas.Identity.Pages.Account
             [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
-            [Required]
-            //our custom prp
+
+            [Required(ErrorMessage = "The Name field is required.")]
             public string Name { get; set; }
             public string Role { get; set; }
             [ValidateNever]
