@@ -36,8 +36,8 @@ namespace ProjectManagement.Models
         [StringLength(255)]
         [Unicode(false)]
         public string PageSource { get; set; } = null!;
-        [Column("log_timestamp")]
-        public byte[] LogTimestamp { get; set; } = null!;
+        [Column("log_timestamp", TypeName = "datetime")]
+        public DateTime LogTimestamp { get; set; }
         [Column("username")]
         [StringLength(255)]
         [Unicode(false)]

@@ -1,4 +1,4 @@
-﻿@model ProjectManagement.Models.Project
+﻿@model ProjectManagement.ViewModels.ProjectUsersVM
 
 @{
     ViewData["Title"] = "Details";
@@ -12,50 +12,64 @@
     <hr />
     <dl class="row">
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ProjectName)
+            @Html.DisplayNameFor(model => model.project.ProjectName)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ProjectName)
+            @Html.DisplayFor(model => model.project.ProjectName)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedAt)
+            @Html.DisplayNameFor(model => model.project.CreatedAt)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedAt)
+            @Html.DisplayFor(model => model.project.CreatedAt)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.DueDate)
+            @Html.DisplayNameFor(model => model.project.DueDate)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.DueDate)
+            @Html.DisplayFor(model => model.project.DueDate)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Budget)
+            @Html.DisplayNameFor(model => model.project.Budget)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Budget)
+            @Html.DisplayFor(model => model.project.Budget)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
+            @Html.DisplayNameFor(model => model.project.Description)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
+            @Html.DisplayFor(model => model.project.Description)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ProjectManager)
+            @Html.DisplayNameFor(model => model.project.ProjectManagerNavigation)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ProjectManager)
+            @Html.DisplayFor(model => model.project.ProjectManagerNavigation.Username)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.StatusNavigation)
+            @Html.DisplayNameFor(model => model.project.StatusNavigation)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.StatusNavigation.StatusName)
+            @Html.DisplayFor(model => model.project.StatusNavigation.StatusName)
         </dd>
+        <dt class="col-sm-2">
+           Project Members
+        </dt>
+        @foreach (UserProject member in Model.project.UserProjects) {
+        <dd class="col-sm-10">
+                @member.Username
+        </dd>
+        }
     </dl>
+    
+     
 </div>
 <div>
-    <a asp-action="Edit" asp-route-id="@Model?.ProjectId">Edit</a> |
+    
+    @if (Model.project.ProjectManager == User.Identity.Name)
+    {
+     <a asp-action="Edit" asp-route-id="@Model?.project.ProjectId">Edit</a>
+    }
     <a asp-action="Index">Back to List</a>
 </div>

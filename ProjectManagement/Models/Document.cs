@@ -24,8 +24,8 @@ namespace ProjectManagement.Models
         [StringLength(25)]
         [Unicode(false)]
         public string DocumentType { get; set; } = null!;
-        [Column("uploaded_at")]
-        public byte[] UploadedAt { get; set; } = null!;
+        [Column("uploaded_at", TypeName = "date")]
+        public DateTime UploadedAt { get; set; }
         [Column("task_id")]
         public int TaskId { get; set; }
         [Column("uploaded_by")]

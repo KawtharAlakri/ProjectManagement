@@ -1,0 +1,49 @@
+﻿@model ProjectManagement.ViewModels.ProjectTaskVM
+
+@{
+    ViewData["Title"] = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Create Task</h1>
+
+<h4>under project: @Model.project.ProjectName</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <input asp-for="@Model.project.ProjectId" class="form-control" hidden/>
+            </div>
+            <div class="form-group">
+                <label asp-for="@Model.task.AssignedTo" class="control-label"></label>
+                <select asp-for="@Model.task.AssignedTo" class="form-control" asp-items="new SelectList(@Model.selectedUsers)"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="@Model.task.TaskName" class="control-label"></label>
+                <input asp-for="@Model.task.TaskName" class="form-control" />
+                <span asp-validation-for="@Model.task.TaskName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="@Model.task.Description" class="control-label"></label>
+                <input asp-for="@Model.task.Description" class="form-control" />
+                <span asp-validation-for="@Model.task.Description" class="text-danger"></span>
+            </div>
+        
+            <div class="form-group">
+                <label asp-for="@Model.task.DueDate" class="control-label"></label>
+                <input asp-for="@Model.task.DueDate" class="form-control" />
+                <span asp-validation-for="@Model.task.DueDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
