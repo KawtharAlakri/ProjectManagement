@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Hubs;
 using ProjectManagement.Models;
+using ProjectManagement.ViewModels;
 
 
 namespace ProjectManagement.Controllers
@@ -25,16 +26,16 @@ namespace ProjectManagement.Controllers
             _hubcontext = hubcontext;
         }
         // GET: Notifications
-        //public async Task<IActionResult> Index()
-        //{
-        //    return View(await _context.Notifications.ToListAsync());
-        //}
-        // GET: Notifications
         public async Task<IActionResult> Index()
         {
-            var projectManagementContext = _context.Notifications.Include(n => n.RecipientNavigation);
-            return View(await projectManagementContext.ToListAsync());
+            return View(await _context.Notifications.ToListAsync());
         }
+        // GET: Notifications
+        //public async Task<IActionResult> Index()
+        //{
+        //    var projectManagementContext = _context.Notifications.Include(n => n.RecipientNavigation);
+        //    return View(await projectManagementContext.ToListAsync());
+        //}
 
         // GET: Notifications/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -65,10 +66,32 @@ namespace ProjectManagement.Controllers
         // POST: Notifications/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> Create([Bind("NotificationId,NotificationText,GeneratedAt")] Notification notification)
+        //{
+        //    //create notification 
+
+        //    if (ModelState.IsValid)
+        //    {
+        //        _context.Add(notification);
+        //        await _context.SaveChangesAsync();
+        //        await NotificationBroadcast();
+        //        return RedirectToAction(nameof(Index));
+        //    }
+        //    ViewData["Recipient"] = new SelectList(_context.Users, "Username", "Username", notification.Recipient);
+        //    return View(notification);
+        //}
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("NotificationId,NotificationText,GeneratedAt")] Notification notification)
+        public async Task<IActionResult> Create(Notification viewModel)
         {
+            //create notification 
+            Notification notification = viewModel;
+            notification.GeneratedAt = DateTime.Now;
+            notification.RecipientNavigation = notification.RecipientNavigation;
+
+            ModelState.Clear();
             if (ModelState.IsValid)
             {
                 _context.Add(notification);
