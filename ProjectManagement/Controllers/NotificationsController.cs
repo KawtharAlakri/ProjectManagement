@@ -66,29 +66,16 @@ namespace ProjectManagement.Controllers
         // POST: Notifications/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Create([Bind("NotificationId,NotificationText,GeneratedAt")] Notification notification)
-        //{
-        //    //create notification 
-
-        //    if (ModelState.IsValid)
-        //    {
-        //        _context.Add(notification);
-        //        await _context.SaveChangesAsync();
-        //        await NotificationBroadcast();
-        //        return RedirectToAction(nameof(Index));
-        //    }
-        //    ViewData["Recipient"] = new SelectList(_context.Users, "Username", "Username", notification.Recipient);
-        //    return View(notification);
-        //}
+  
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Notification viewModel)
+        public async Task<IActionResult> Create(Notification viewModel, String recipent)
         {
             //create notification 
             Notification notification = viewModel;
             notification.GeneratedAt = DateTime.Now;
+            notification.IsRead = false;
+            notification.Recipient = recipent;
             notification.RecipientNavigation = notification.RecipientNavigation;
 
             ModelState.Clear();
