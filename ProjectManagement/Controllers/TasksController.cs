@@ -25,10 +25,29 @@ namespace ProjectManagement.Controllers
         // GET: Tasks
         public async Task<IActionResult> Index(int? id)
         {
-            var projectManagementContext = _context.Tasks.Include(t => t.AssignedToNavigation).Include(t => t.Project).Include(t => t.StatusNavigation).Where(x => x.ProjectId == id);
-            ViewBag.projectId = id;
-            ViewBag.project_manager = _context.Projects.Find(id).ProjectManager;
-            return View(await projectManagementContext.ToListAsync());
+            IQueryable<Models.Task> tasksContext = _context.Tasks.Include(t => t.AssignedToNavigation).Include(t => t.Project).Include(t => t.StatusNavigation);
+            //display tasks for a project
+            if (id.HasValue)
+            {
+                tasksContext = tasksContext.Where(x => x.ProjectId == id);
+                ViewBag.projectId = id;
+                ViewBag.project = _context.Projects.Find(id);
+                ViewBag.project_manager = _context.Projects.Find(id).ProjectManager;
+            }
+            ////display tasks for user
+            //else if (!String.IsNullOrEmpty(username))
+            //{
+            //    tasksContext = tasksContext.Where(t=>t.AssignedTo == username);
+            //    ViewBag.username = username;
+            //}
+            return View(await tasksContext.ToListAsync());
+        }
+
+        public async Task<IActionResult> MyTasks()
+        {
+            IQueryable<Models.Task> tasksContext = _context.Tasks.Include(t => t.AssignedToNavigation).Include(t => t.Project).Include(t => t.StatusNavigation);
+            tasksContext = tasksContext.Where(t => t.AssignedTo == User.Identity.Name);
+            return View(await tasksContext.ToListAsync());
         }
 
         // GET: Tasks/Details/5
@@ -43,13 +62,17 @@ namespace ProjectManagement.Controllers
                 .Include(t => t.AssignedToNavigation)
                 .Include(t => t.Project)
                 .Include(t => t.StatusNavigation)
+                .Include(t=> t.Comments)
+                .Include(t=>t.Documents)
                 .FirstOrDefaultAsync(m => m.TaskId == id);
             if (task == null)
             {
                 return NotFound();
             }
 
-            return View(task);
+            ProjectTaskVM vm = new ProjectTaskVM { comments = task.Comments, documents = task.Documents, project = task.Project, task = task};
+
+            return View(vm);
         }
 
         // GET: Tasks/Create
@@ -115,15 +138,22 @@ namespace ProjectManagement.Controllers
                 return NotFound();
             }
 
-            var task = await _context.Tasks.FindAsync(id);
+            Models.Task task = await _context.Tasks.FindAsync(id);
             if (task == null)
             {
                 return NotFound();
             }
-            ViewData["AssignedTo"] = new SelectList(_context.Users, "Username", "Username", task.AssignedTo);
-            ViewData["ProjectId"] = new SelectList(_context.Projects, "ProjectId", "ProjectId", task.ProjectId);
+
+            Project project = _context.Projects.Find(task.ProjectId);
+            var userProjects = _context.UserProjects.Where(x => x.ProjectId == project.ProjectId);
+            List<string> projectMembers = new List<string>();
+            foreach (UserProject userProject in userProjects)
+            {
+                projectMembers.Add(userProject.Username);
+            }
+            ProjectTaskVM vm = new ProjectTaskVM { project = project, selectedUsers = projectMembers, task = task };
             ViewData["Status"] = new SelectList(_context.Statuses, "StatusName", "StatusName", task.Status);
-            return View(task);
+            return View(vm);
         }
 
         // POST: Tasks/Edit/5
@@ -131,12 +161,21 @@ namespace ProjectManagement.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("TaskId,AssignedTo,TaskName,Description,CreatedAt,DueDate,ProjectId,Status")] Models.Task task)
+        public async Task<IActionResult> Edit(ProjectTaskVM vm)
         {
-            if (id != task.TaskId)
-            {
-                return NotFound();
-            }
+            Models.Task task = vm.task;
+            vm.project = _context.Projects.Find(vm.project.ProjectId);
+            vm.project.ProjectManagerNavigation = _context.Users.Find(vm.project.ProjectManager);
+            vm.project.StatusNavigation = _context.Statuses.Find(vm.project.Status);
+            //vm.project = task.Project;
+            task.AssignedToNavigation = _context.Users.Find(vm.task.AssignedTo);
+            task.StatusNavigation = _context.Statuses.Find(vm.task.Status);
+            task.Project = vm.project;
+            task.ProjectId = vm.project.ProjectId;
+            ModelState.Clear();
+            TryValidateModel(task);
+
+            Project project = vm.project;
 
             if (ModelState.IsValid)
             {
@@ -156,7 +195,7 @@ namespace ProjectManagement.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new {id = project.ProjectId});
             }
             ViewData["AssignedTo"] = new SelectList(_context.Users, "Username", "Username", task.AssignedTo);
             ViewData["ProjectId"] = new SelectList(_context.Projects, "ProjectId", "ProjectId", task.ProjectId);
