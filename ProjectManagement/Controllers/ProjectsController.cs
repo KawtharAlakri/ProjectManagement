@@ -20,6 +20,7 @@ namespace ProjectManagement.Controllers
         public ProjectsController(ProjectManagementContext context)
         {
             _context = context;
+           ;
         }
 
         // GET: Projects
@@ -202,11 +203,23 @@ namespace ProjectManagement.Controllers
                     // close the existing DataReader
                     await _context.Database.CloseConnectionAsync();
 
+                    // Check if the project status has changed
+                    var previousStatus = await _context.Projects.Where(p => p.ProjectId == viewModel.project.ProjectId).Select(p => p.Status).FirstOrDefaultAsync();
+
                     /// update the project
                     _context.Update(viewModel.project);
                     await _context.SaveChangesAsync();
 
-                    
+                    // Check if the project status has changed
+                    var currentStatus = viewModel.project.Status;
+
+                    if (previousStatus != currentStatus)
+                    {
+                        var message = $"The status of project {viewModel.project.ProjectName} has changed to {currentStatus}";
+                        var recipient = viewModel.project.ProjectManager.ToString();
+                       await NotificationsController.PushNotification(recipient, message,_context);
+               
+                    }
 
                     //update project members (remove all and insert again) ? 
                     var records = _context.UserProjects.Where(p => p.ProjectId == viewModel.project.ProjectId);
