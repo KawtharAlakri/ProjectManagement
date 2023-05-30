@@ -5,6 +5,7 @@ using ProjectManagement.Data;
 using ProjectManagement.Areas.Identity.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using ProjectManagement.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,9 @@ builder.Services.AddDefaultIdentity<IdentityUser>()
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<IdentityContext>();
 
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<NotificationsHub>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -33,6 +37,7 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();;
 app.UseAuthorization();
+app.MapHub<NotificationsHub>("/NotificationsHub");
 
 app.MapControllerRoute(
     name: "default",
