@@ -20,6 +20,7 @@
                                 <th>#</th>
                                 <th>Notification</th>
                                 <th>Date / Time</th>
+                                <th>Read</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -42,35 +43,45 @@
     <script>
 
         "use strict";
-
+        var username = '@User.Identity.Name';
         //define connection to hub
         var connection = new signalR.HubConnectionBuilder().withUrl("/NotificationsHub").build();
 
         //start the hub connection
         $(function () {
             connection.start().then(function () {
-                alert('Connected to NotificationsHub');
-                InvokeNotifications(); //to load existing list of notifications
+                alert('Connected to NotificationsHub '+ username);
+                InvokeNotifications(username); //to load existing list of notifications
             }).catch(function (err) {
                 return console.error(err.toString());
             });
         });
         //initially, we need to show the list of all notifications
         //So we will use our action method that returns Json
-        function InvokeNotifications() {
-            var url = "../Notifications/GetAll";
+        //function InvokeNotifications() {
+        //    var url = "../Notifications/GetAll";
+        //    $.get(url, function (nData) {
+        //        BindNotificationsToGrid(nData);
+        //    }
+        //    );
+        //};
+
+        function InvokeNotifications(username) {         
+            var url = "../Notifications/GetForUser?username=" + username;
+            console.log(url);
             $.get(url, function (nData) {
                 BindNotificationsToGrid(nData);
-            }
-            );
+            });
         };
-
-        //the server will call this will updated notification list on every database change
+      //the server will call this will updated notification list on every database change
         connection.on("getUpdatedNotifications", function (notifications) {
             BindNotificationsToGrid(notifications);
+            InvokeNotifications(username); //refresh the notification 
         });
+ 
 
         function BindNotificationsToGrid(notifications) {
+           console.log(notifications);
             $('#tblNotifications tbody').empty();
 
             var tr;
@@ -78,12 +89,33 @@
                 tr = $('<tr/>');
                 tr.append(`<td>${(index + 1)}</td>`);
                 tr.append(`<td>${notification.notificationText}</td>`);
-                tr.append(`<td>${notification.notificationDate}</td>`);
+                tr.append(`<td>${new Date(notification.generatedAt).toLocaleString()}</td>`);
+                tr.append(`<td>${notification.isRead ? "Read" : "Not read"}</td>`);
+                tr.append(`<td><button class="btn btn-danger" onclick="DeleteNotification(${JSON.stringify(notification)})">Delete</button></td>`);
                 $('#tblNotifications').append(tr);
             });
-        }
+        };
 
+        
 
+        //function DeleteNotification(notification) {
+        //    console.log('notification: ' + JSON.stringify(notification));
+
+        //    // Send an AJAX request to the server to delete the notification
+        //    $.ajax({
+        //        url: `/Notifications/DeleteNotification/${notification.id}`,
+        //        type: 'POST',
+        //        data: { id: notification.id },
+        //        success: function (result) {
+        //            console.log('DeleteNotification success');
+        //            // Refresh the notifications table
+        //            InvokeNotifications();
+        //        },
+        //        error: function (xhr, status, error) {
+        //            console.log('DeleteNotification error: ' + error);
+        //        }
+        //    });
+        //}
     </script>
 
 

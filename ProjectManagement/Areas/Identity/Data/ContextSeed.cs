@@ -4,7 +4,7 @@ namespace ProjectManagement.Areas.Identity.Data
 {
     public class ContextSeed
     {
-        public static async Task SeedRolesAsync(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+        public static async Task SeedRolesAsync(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
         {
             if (!roleManager.RoleExistsAsync("Admin").GetAwaiter().GetResult())
             {
@@ -13,7 +13,7 @@ namespace ProjectManagement.Areas.Identity.Data
                 await roleManager.CreateAsync(new IdentityRole("User"));
             }
         }
-        public static async Task SeedAdminAsync(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> RoleManager)
+        public static async Task SeedAdminAsync(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> RoleManager)
         {
             var defaultUser = new ApplicationUser
             {

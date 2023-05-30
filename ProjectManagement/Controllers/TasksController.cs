@@ -92,6 +92,12 @@ namespace ProjectManagement.Controllers
                 //add task
                 _context.Add(task);
                 await _context.SaveChangesAsync();
+                //add notification
+                var message = "You have been assigned to a new task: " + task.TaskName;
+                var recipient = task.AssignedTo;
+
+               await NotificationsController.PushNotification(recipient, message,_context);
+
                 return RedirectToAction(nameof(Index), new {id = vm.project.ProjectId});
             }
 

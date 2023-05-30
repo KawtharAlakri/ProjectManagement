@@ -25,6 +25,8 @@ namespace ProjectManagement.Controllers
             _context = context;
             _hubcontext = hubcontext;
         }
+
+
         // GET: Notifications
         public async Task<IActionResult> Index()
         {
@@ -145,6 +147,7 @@ namespace ProjectManagement.Controllers
         }
 
         // GET: Notifications/Delete/5
+        
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null || _context.Notifications == null)
@@ -190,7 +193,18 @@ namespace ProjectManagement.Controllers
         public async Task<IActionResult> Client()
         {
             return View();
-        } 
+        }
+        ////for a specific user 
+        [Route("Notifications/GetForUser")]
+        public IActionResult GetForUser(string username)
+        {
+            var notifications = _context.Notifications
+                .Where(n => n.Recipient == username)
+                .OrderByDescending(n => n.GeneratedAt)
+                .ToList();
+
+            return Json(notifications);
+        }
         public async Task<JsonResult> GetAll()
         {
             return Json(_context.Notifications.ToList());
@@ -198,6 +212,21 @@ namespace ProjectManagement.Controllers
         public async System.Threading.Tasks.Task NotificationBroadcast()
         {
             await _hubcontext.NotificationsHubBroadcast(_context.Notifications.ToList());
+        }
+        public static async System.Threading.Tasks.Task PushNotification(String recipient, String message, ProjectManagementContext context)
+        {
+            // create notification obj
+            var notification = new Notification
+            {
+                GeneratedAt = DateTime.Now,
+                IsRead = false,
+                Recipient = recipient,
+                NotificationText = message,
+
+            };
+             context.Notifications.Add(notification);
+            await context.SaveChangesAsync();
+
         }
     }
 }
