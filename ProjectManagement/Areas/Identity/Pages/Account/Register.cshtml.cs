@@ -42,7 +42,7 @@ namespace ProjectManagement.Areas.Identity.Pages.Account
 
         //adding roles to our program 
         private readonly RoleManager<IdentityRole> _roleManager;
-
+        //private readonly UserManager<IdentityRole> _userManager;
 
         public RegisterModel(
             UserManager<IdentityUser> userManager,
@@ -126,11 +126,8 @@ namespace ProjectManagement.Areas.Identity.Pages.Account
 
         public async System.Threading.Tasks.Task OnGetAsync(string returnUrl = null)
         {
-            if (_roleManager.RoleExistsAsync("Admin").GetAwaiter().GetResult())
-            {
-                _roleManager.CreateAsync(new IdentityRole("Admin")).GetAwaiter().GetResult();
-                _roleManager.CreateAsync(new IdentityRole("User")).GetAwaiter().GetResult();
-            }
+            await ContextSeed.SeedRolesAsync( _userManager, _roleManager);
+            await ContextSeed.SeedAdminAsync(_userManager, _roleManager);
             ReturnUrl = returnUrl;
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             Input = new InputModel()

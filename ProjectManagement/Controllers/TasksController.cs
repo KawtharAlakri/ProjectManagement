@@ -164,6 +164,12 @@ namespace ProjectManagement.Controllers
                 _context.Add(task);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Task Created Successfully.";
+                //add notification
+                var message = "You have been assigned to a new task: " + task.TaskName;
+                var recipient = task.AssignedTo;
+
+               await NotificationsController.PushNotification(recipient, message,_context);
+
                 return RedirectToAction(nameof(Index), new {id = vm.project.ProjectId});
             }
 
