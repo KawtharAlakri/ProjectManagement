@@ -1,0 +1,113 @@
+﻿@model IEnumerable<ProjectManagement.Models.Document>
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>@ViewBag.Task.TaskName Documents</h1>
+@if (TempData.ContainsKey("ErrorMessage") && !String.IsNullOrEmpty(TempData["ErrorMessage"].ToString()))
+{
+    <div class="alert alert-dismissible alert-danger">
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <strong>@TempData["ErrorMessage"] </strong>
+    </div>
+}
+@if (TempData.ContainsKey("SuccessMessage") && !String.IsNullOrEmpty(TempData["SuccessMessage"].ToString()))
+{
+    <div class="alert alert-dismissible alert-success">
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <strong>@TempData["SuccessMessage"]</strong>
+    </div>
+}
+<p>
+    <a asp-action="Create" asp-route-taskid="@ViewBag.Task.TaskId">Attach Document</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.DocumentName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.FilePath)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DocumentType)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.UploadedAt)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.UploadedBy)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DocumentName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.FilePath)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DocumentType)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.UploadedAt)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.UploadedBy)
+                </td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.DocumentId">View</a> |
+                    <a href="#" onclick="confirmDelete('@item.DocumentId', '@item.DocumentName')">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Modal -->
+<div class="modal fade" id="deleteConfirmationModal" tabindex="-1" role="dialog" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteConfirmationModalLabel">Delete Confirmation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete document <span id="documentNameSpan"></span>?</p>
+            </div>
+            <div class="modal-footer">
+                <form id="deleteForm" asp-action="Delete" asp-controller="Documents" method="post">
+                    <input type="hidden" name="documentId" id="documentIdInput" />
+                    <input type="submit" value="Delete" class="btn btn-danger" />
+                    <a class="btn btn-secondary" data-bs-dismiss="modal">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmDelete(documentId, documentName) {
+        // Set the document ID and name in the modal
+        document.getElementById("documentIdInput").value = documentId;
+        document.getElementById("documentNameSpan").textContent = documentName;
+
+        // Update the form action URL
+        var form = document.getElementById("deleteForm");
+        var actionUrl = form.getAttribute("action");
+        actionUrl += "/" + documentId;
+        form.setAttribute("action", actionUrl);
+
+        // Show the modal
+        var modal = new bootstrap.Modal(document.getElementById("deleteConfirmationModal"));
+        modal.show();
+    }
+</script>

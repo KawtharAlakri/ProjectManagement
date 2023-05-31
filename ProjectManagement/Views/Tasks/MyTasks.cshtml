@@ -1,18 +1,11 @@
 ﻿@model IEnumerable<ProjectManagement.Models.Task>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "MyTasks";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>@ViewBag.project.ProjectName 's Tasks</h1>
-@*restrict add access to project manager *@
-@if (User.Identity.Name == ViewBag.project_manager)
-{
-    <p>
-        <a asp-action="Create" asp-route-id="@ViewBag.projectId">Add New Task</a>
-    </p>
-}
+<h1>My Tasks</h1>
 @if (TempData.ContainsKey("ErrorMessage") && !String.IsNullOrEmpty(TempData["ErrorMessage"].ToString()))
 {
     <div class="alert alert-dismissible alert-danger">
@@ -27,6 +20,18 @@
         <strong>@TempData["SuccessMessage"]</strong>
     </div>
 }
+<form asp-action="MyTasks" asp-controller="Tasks" method="get">
+    <input type="text" name="searchString" placeholder="Search by task name.." value="@ViewBag.searchString" />
+    <label> Status </label>
+    <select name="statusFilter" asp-items="ViewBag.Status">         
+ </select>
+    <label> Project </label>
+    <select name="projectFilter" asp-items="ViewBag.Projects">
+    </select>
+    <input type="submit" value="Filter"/>
+    <a asp-action="MyTasks" asp-controller="Tasks">Reset</a>
+</form>
+
 <table class="table">
     <thead>
         <tr>
@@ -42,19 +47,17 @@
             <th>
                 @Html.DisplayNameFor(model => model.DueDate)
             </th>
+           
             <th>
-                @Html.DisplayNameFor(model => model.AssignedToNavigation)
-            </th>
-            @*<th>
                 @Html.DisplayNameFor(model => model.Project)
-            </th>*@
+            </th>
             <th>
                 @Html.DisplayNameFor(model => model.StatusNavigation)
             </th>
             <th></th>
         </tr>
     </thead>
-    <tbody>
+    <tbody> 
 @foreach (var item in Model) {
         <tr>
             <td>
@@ -70,25 +73,18 @@
                 @Html.DisplayFor(modelItem => item.DueDate)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.AssignedToNavigation.Username)
+                @Html.DisplayFor(modelItem => item.Project.ProjectName)
             </td>
-            @*<td>
-                @Html.DisplayFor(modelItem => item.Project.ProjectId)
-            </td>*@
             <td>
                 @Html.DisplayFor(modelItem => item.StatusNavigation.StatusName)
             </td>
             <td>
-                @*members have read/update access to tasks *@
-                    <a asp-action="Edit" asp-route-id="@item.TaskId">Edit</a> <text>|</text>
-                    <a asp-action="Details" asp-route-id="@item.TaskId">Details</a> <text>|</text>
-                    @*//project manager have also delete *@                    
-                    @if (User.Identity.Name == ViewBag.project_manager)
-                    {
-                        <a asp-action="Delete" asp-route-id="@item.TaskId">Delete</a>
-                    }
+                <a asp-action="Edit" asp-route-id="@item.TaskId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.TaskId">Details</a> |
             </td>
         </tr>
+        
 }
     </tbody>
 </table>
+
