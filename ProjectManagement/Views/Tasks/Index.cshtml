@@ -13,7 +13,20 @@
         <a asp-action="Create" asp-route-id="@ViewBag.projectId">Add New Task</a>
     </p>
 }
-
+@if (TempData.ContainsKey("ErrorMessage") && !String.IsNullOrEmpty(TempData["ErrorMessage"].ToString()))
+{
+    <div class="alert alert-dismissible alert-danger">
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <strong>@TempData["ErrorMessage"] </strong>
+    </div>
+}
+@if (TempData.ContainsKey("SuccessMessage") && !String.IsNullOrEmpty(TempData["SuccessMessage"].ToString()))
+{
+    <div class="alert alert-dismissible alert-success">
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <strong>@TempData["SuccessMessage"]</strong>
+    </div>
+}
 <table class="table">
     <thead>
         <tr>

@@ -64,6 +64,9 @@
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.task.StatusNavigation.StatusName)
         </dd>
+        <dd class="col-sm-10">
+            <a asp-action="Index" asp-controller="Documents" asp-route-taskid="@Model.task?.TaskId">Task Documents</a>
+        </dd>
     </dl>
 </div>
 <hr />
@@ -71,9 +74,7 @@
 <table class="table">
     <thead>
         <tr>
-            <th>
-                Comment Id
-            </th>
+            
             <th>
                Content
             </th>
@@ -83,7 +84,7 @@
             <th>
                Posted At
             </th>
-
+            <th></th>
             <th></th>
         </tr>
     </thead>
@@ -91,9 +92,7 @@
         @foreach (var item in Model.comments)
         {
             <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.CommentId)
-                </td>
+                
                 <td>
                     @Html.DisplayFor(modelItem => item.CommentText)
                 </td>
@@ -103,6 +102,16 @@
                 <td>
                     @Html.DisplayFor(modelItem => item.PostedAt)
                 </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.PostedAt)
+                </td>
+                <td>
+                <td>
+                    <a asp-action="Edit" asp-controller="Comments" asp-route-id="@item.CommentId">Edit</a>
+                </td>
+                <td>
+                    <a href="#" class="delete-link" data-comment-id="@item.CommentId">Delete</a>
+                </td>
             </tr>
 
         }
@@ -111,8 +120,8 @@
 <br />
 <hr />
 
-<h4>Add Comment:</h4>
-<div class="row">
+<div class="row" id="addComment">
+    <h4>Add Comment:</h4>
     <div class="col-md-4">
         <form asp-action="Create" asp-controller="Comments">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -134,3 +143,51 @@
     <a asp-action="Edit" asp-route-id="@Model.task?.TaskId">Edit</a> |
     <a asp-action="Index">Back to List</a>
 </div>
+
+@*delete confirmation modal, it will recieve comment author and id from the jQuery,then use it to delete the function from the post delete action of comments controller*@
+<div class="modal fade" id="deleteConfirmationModal" tabindex="-1" role="dialog" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteConfirmationModalLabel">Delete Confirmation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the comment written by <span id="authorName"></span>?</p>
+            </div>
+            <div class="modal-footer">
+                <form id="deleteForm" asp-action="Delete" asp-controller="Comments">
+                    <input type="hidden" name="commentId" />
+                    <input type="submit" value="Delete" class="btn btn-danger" />
+                    <a asp-action="Details" asp-controller="Tasks" asp-route-id="@Model.task.TaskId" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('.delete-link').on('click', function (e) {
+                e.preventDefault();
+
+                var commentId = $(this).data('comment-id');
+                var authorName = $(this).closest('tr').find('td:eq(1)').text();
+                var deleteUrl = '@Url.Action("Delete", "Comments")' + '/' + commentId;
+
+                $('#deleteConfirmationModal #authorName').text(authorName);
+                $('#deleteConfirmationModal').modal('show');
+
+                $('#deleteConfirmationModal').on('shown.bs.modal', function () {
+                    $('#deleteForm input[name="commentId"]').val(commentId);
+                    $('#deleteForm').attr('action', deleteUrl);
+                });
+            });
+        });
+    </script>
+}
+

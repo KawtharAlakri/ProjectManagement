@@ -19,21 +19,9 @@
                 <input asp-for="CommentText" class="form-control" />
                 <span asp-validation-for="CommentText" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="PostedAt" class="control-label"></label>
-                <input asp-for="PostedAt" class="form-control" />
-                <span asp-validation-for="PostedAt" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="TaskId" class="control-label"></label>
-                <select asp-for="TaskId" class="form-control" asp-items="ViewBag.TaskId"></select>
-                <span asp-validation-for="TaskId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="AuthorId" class="control-label"></label>
-                <select asp-for="AuthorId" class="form-control" asp-items="ViewBag.AuthorId"></select>
-                <span asp-validation-for="AuthorId" class="text-danger"></span>
-            </div>
+                <input type="hidden" asp-for="TaskId" class="form-control"></input>
+                <input type="hidden" asp-for="AuthorId" class="form-control"></input>
+            <input type="hidden" asp-for="PostedAt" class="form-control"></input>
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>

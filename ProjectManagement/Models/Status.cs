@@ -22,8 +22,8 @@ namespace ProjectManagement.Models
         public string StatusName { get; set; } = null!;
 
         [InverseProperty("StatusNavigation")]
-        public virtual ICollection<Project> Projects { get; set; }
+        public virtual ICollection<Project>? Projects { get; set; }
         [InverseProperty("StatusNavigation")]
-        public virtual ICollection<Task> Tasks { get; set; }
+        public virtual ICollection<Task>? Tasks { get; set; }
     }
 }

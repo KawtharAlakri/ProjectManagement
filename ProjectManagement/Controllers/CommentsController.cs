@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,7 @@ using ProjectManagement.Models;
 
 namespace ProjectManagement.Controllers
 {
+    [Authorize]
     public class CommentsController : Controller
     {
         private readonly ProjectManagementContext _context;
@@ -65,17 +67,10 @@ namespace ProjectManagement.Controllers
             comment.Author = _context.Users.Find(User.Identity.Name);
             comment.AuthorId = User.Identity.Name;
             comment.PostedAt = DateTime.Now;
-            comment.Task = _context.Tasks.Find(comment.TaskId);
-
-            //fill the task object  
-            comment.Task.Project = _context.Projects.Find(comment.Task.ProjectId);
-            comment.Task.AssignedToNavigation = _context.Users.Find(comment.Task.AssignedTo);
-            comment.Task.StatusNavigation = _context.Statuses.Find(comment.Task.Status);
-            comment.Author.Tasks = _context.Tasks.Where(x => x.AssignedTo == comment.AuthorId).ToList();
+            comment.Task = _context.Tasks.Include(t => t.StatusNavigation).Include(t => t.Project).Include(t => t.AssignedToNavigation).FirstOrDefault(t => t.TaskId == comment.TaskId);
 
             //fill project object 
-            comment.Task.Project.ProjectManagerNavigation = _context.Users.Find(comment.Task.Project.ProjectManager);
-            comment.Task.Project.StatusNavigation = _context.Statuses.Find(comment.Task.Project.Status);
+            comment.Task.Project = _context.Projects.Include(p => p.ProjectManagerNavigation).Include(p => p.StatusNavigation).FirstOrDefault(p => p.ProjectId == comment.Task.ProjectId);
             ModelState.Clear();
             TryValidateModel(comment);
             if (ModelState.IsValid)
@@ -102,8 +97,7 @@ namespace ProjectManagement.Controllers
             {
                 return NotFound();
             }
-            ViewData["AuthorId"] = new SelectList(_context.Users, "Username", "Username", comment.AuthorId);
-            ViewData["TaskId"] = new SelectList(_context.Tasks, "TaskId", "TaskId", comment.TaskId);
+            
             return View(comment);
         }
 
@@ -114,17 +108,33 @@ namespace ProjectManagement.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("CommentId,CommentText,PostedAt,TaskId,AuthorId")] Comment comment)
         {
+            
             if (id != comment.CommentId)
             {
                 return NotFound();
             }
 
+            //fill the comment object
+            comment.Author = _context.Users.Find(comment.AuthorId);
+            comment.Task = _context.Tasks.Include(t => t.StatusNavigation).Include(t => t.Project).Include(t => t.AssignedToNavigation).FirstOrDefault(t => t.TaskId == comment.TaskId);
+
+            ////fill the task object  
+            //comment.Task.Project = _context.Projects.Find(comment.Task.ProjectId);
+            //comment.Task.AssignedToNavigation = _context.Users.Find(comment.Task.AssignedTo);
+            //comment.Task.StatusNavigation = _context.Statuses.Find(comment.Task.Status);
+
+            //fill project object 
+            comment.Task.Project = _context.Projects.Include(p=>p.ProjectManagerNavigation).Include(p=>p.StatusNavigation).FirstOrDefault(p=>p.ProjectId == comment.Task.ProjectId);
+
+            ModelState.Clear();
+            TryValidateModel(comment);
             if (ModelState.IsValid)
             {
                 try
                 {
                     _context.Update(comment);
                     await _context.SaveChangesAsync();
+                   
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -137,10 +147,10 @@ namespace ProjectManagement.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                TempData["SuccessMessage"] = "Your comment has been updated successfully.";
+                return RedirectToAction("Details", "Tasks", new { id = comment.TaskId });
             }
-            ViewData["AuthorId"] = new SelectList(_context.Users, "Username", "Username", comment.AuthorId);
-            ViewData["TaskId"] = new SelectList(_context.Tasks, "TaskId", "TaskId", comment.TaskId);
+            TempData["ErrorMessage"] = "An error occurred, try updating your comment again.";
             return View(comment);
         }
 
@@ -160,8 +170,8 @@ namespace ProjectManagement.Controllers
             {
                 return NotFound();
             }
-
-            return View(comment);
+            TempData["DeleteComment"] = comment.CommentId;
+            return RedirectToAction("Details", "Tasks", new { id = comment.TaskId});
         }
 
         // POST: Comments/Delete/5
@@ -180,7 +190,8 @@ namespace ProjectManagement.Controllers
             }
             
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            TempData["SuccessMessage"] = "Comment Deleted Successfully.";
+            return RedirectToAction("Details", "Tasks", new { id = comment.TaskId });
         }
 
         private bool CommentExists(int id)

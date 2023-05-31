@@ -5,10 +5,9 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Details</h1>
+<h1>@Model.project.ProjectName</h1>
 
 <div>
-    <h4>Project</h4>
     <hr />
     <dl class="row">
         <dt class = "col-sm-2">
@@ -62,8 +61,58 @@
         </dd>
         }
     </dl>
-    
-     
+</div>
+<div>
+    <h4>Tasks:</h4>
+    <table class="table">
+        <thead>
+            <tr>
+
+                <th>
+                    Content
+                </th>
+                <th>
+                    Written By
+                </th>
+                <th>
+                    Posted At
+                </th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.project.Tasks)
+            {
+                <tr>
+
+                    <td>
+                        @Html.DisplayFor(modelItem => item.TaskName)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Description)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.AssignedTo)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.CreatedAt)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.DueDate)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Status)
+                    </td>
+                    <td>
+                    <td>
+                        <a asp-action="Details" asp-controller="Tasks" asp-route-id="@item.TaskId">Details</a>
+                    </td>
+                </tr>
+
+            }
+        </tbody>
+    </table>
 </div>
 <div>
     

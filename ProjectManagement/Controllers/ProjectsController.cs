@@ -34,7 +34,7 @@ namespace ProjectManagement.Controllers
             
             //aplly any search or filter 
             if (!String.IsNullOrEmpty(searchString))
-            {
+            { 
                 fullProjectsContext = fullProjectsContext.Where(p => p.ProjectName.Contains(searchString));
             }
             if (filterBy == "member")
@@ -142,10 +142,10 @@ namespace ProjectManagement.Controllers
                     }
                     await _context.SaveChangesAsync();
                 }
-
+                TempData["SuccessMessage"] = "Project Created Successfully.";
                 return RedirectToAction(nameof(Index));
             }
-
+            TempData["ErrorMessage"] = "Sorry, an error occurred, try again.";
             return View(viewModel);
         }
 
@@ -227,6 +227,8 @@ namespace ProjectManagement.Controllers
                                 _context.UserProjects.Add(userProject);
                             }
                         }
+                        
+
                         await _context.SaveChangesAsync();
                     }
 
@@ -242,8 +244,10 @@ namespace ProjectManagement.Controllers
                         throw;
                     }
                 }
+                TempData["SuccessMessage"] = "Project Updated Successfully.";
                 return RedirectToAction(nameof(Index));
             }
+            TempData["ErrorMessage"] = "Sorry, an error occurred, try again.";
             ViewData["Status"] = new SelectList(_context.Statuses, "StatusName", "StatusName", viewModel.project.Status);
             return View(viewModel);
         }
@@ -300,7 +304,7 @@ namespace ProjectManagement.Controllers
                 _context.Projects.Remove(project);
                 await _context.SaveChangesAsync();
             }
-
+            TempData["SuccessMessage"] = "Project Deleted Successfully.";
             return RedirectToAction(nameof(Index));
         }
 

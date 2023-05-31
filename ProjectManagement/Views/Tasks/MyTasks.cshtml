@@ -6,6 +6,31 @@
 }
 
 <h1>My Tasks</h1>
+@if (TempData.ContainsKey("ErrorMessage") && !String.IsNullOrEmpty(TempData["ErrorMessage"].ToString()))
+{
+    <div class="alert alert-dismissible alert-danger">
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <strong>@TempData["ErrorMessage"] </strong>
+    </div>
+}
+@if (TempData.ContainsKey("SuccessMessage") && !String.IsNullOrEmpty(TempData["SuccessMessage"].ToString()))
+{
+    <div class="alert alert-dismissible alert-success">
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <strong>@TempData["SuccessMessage"]</strong>
+    </div>
+}
+<form asp-action="MyTasks" asp-controller="Tasks" method="get">
+    <input type="text" name="searchString" placeholder="Search by task name.." value="@ViewBag.searchString" />
+    <label> Status </label>
+    <select name="statusFilter" asp-items="ViewBag.Status">         
+ </select>
+    <label> Project </label>
+    <select name="projectFilter" asp-items="ViewBag.Projects">
+    </select>
+    <input type="submit" value="Filter"/>
+    <a asp-action="MyTasks" asp-controller="Tasks">Reset</a>
+</form>
 
 <table class="table">
     <thead>
@@ -32,7 +57,7 @@
             <th></th>
         </tr>
     </thead>
-    <tbody>
+    <tbody> 
 @foreach (var item in Model) {
         <tr>
             <td>

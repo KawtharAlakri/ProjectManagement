@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using ProjectManagement.Models;
@@ -33,20 +34,52 @@ namespace ProjectManagement.Controllers
                 ViewBag.projectId = id;
                 ViewBag.project = _context.Projects.Find(id);
                 ViewBag.project_manager = _context.Projects.Find(id).ProjectManager;
+
+                //validate that user is member or manager before returning the view 
+                var isMember = _context.UserProjects.Any(p => p.ProjectId == id && p.Username == User.Identity.Name);
+                if (_context.Projects.Find(id).ProjectManager != User.Identity.Name && !isMember)
+                {
+                    TempData["ErrorMessage"] = "You do not have permission to view this page.";
+                    return RedirectToAction("Index", "Projects");
+                }
             }
-            ////display tasks for user
-            //else if (!String.IsNullOrEmpty(username))
-            //{
-            //    tasksContext = tasksContext.Where(t=>t.AssignedTo == username);
-            //    ViewBag.username = username;
-            //}
             return View(await tasksContext.ToListAsync());
         }
 
-        public async Task<IActionResult> MyTasks()
+        public async Task<IActionResult> MyTasks(string searchString, string statusFilter, int projectFilter)
         {
-            IQueryable<Models.Task> tasksContext = _context.Tasks.Include(t => t.AssignedToNavigation).Include(t => t.Project).Include(t => t.StatusNavigation);
-            tasksContext = tasksContext.Where(t => t.AssignedTo == User.Identity.Name);
+            //get initial tasks list (all tasks assigned to logged-in user)
+            IQueryable<Models.Task> tasksContext = _context.Tasks.Include(t => t.AssignedToNavigation)
+                .Include(t => t.Project)
+                .Include(t => t.StatusNavigation)
+                .Where(t => t.AssignedTo == User.Identity.Name);
+
+            //check for and apply filters 
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                tasksContext = tasksContext.Where(x => x.TaskName.Contains(searchString));
+            }
+             else if (!String.IsNullOrEmpty(statusFilter))
+            {
+                tasksContext = tasksContext.Where(x => x.Status == statusFilter);
+            }
+            else if (projectFilter > 0)
+            {
+                tasksContext = tasksContext.Where(x => x.ProjectId == projectFilter);
+            }
+
+             //get all users' projects 
+            var userProjects = _context.Projects
+                                   .Include(p => p.ProjectManagerNavigation)
+                                   .Include(p => p.StatusNavigation)
+                                   .Include(p => p.UserProjects)
+                                   .Where(p => p.UserProjects.Any(up => up.Username == User.Identity.Name));
+
+            //pass filtering values in viewBag to keep it once results are shown 
+            ViewBag.searchString = searchString;
+            ViewData["Status"] = new SelectList(_context.Statuses, "StatusName", "StatusName", statusFilter);
+            ViewData["Projects"] = new SelectList(userProjects, "ProjectId", "ProjectName", projectFilter);
+
             return View(await tasksContext.ToListAsync());
         }
 
@@ -61,6 +94,7 @@ namespace ProjectManagement.Controllers
             var task = await _context.Tasks
                 .Include(t => t.AssignedToNavigation)
                 .Include(t => t.Project)
+                .Include(t => t.Project.UserProjects)
                 .Include(t => t.StatusNavigation)
                 .Include(t=> t.Comments)
                 .Include(t=>t.Documents)
@@ -70,6 +104,13 @@ namespace ProjectManagement.Controllers
                 return NotFound();
             }
 
+            //validate that user is project member or manager before returning task details 
+            var isMember = _context.UserProjects.Any(p => p.ProjectId == task.ProjectId && p.Username == User.Identity.Name);
+            if (task.Project.ProjectManager != User.Identity.Name && !isMember)
+            {
+                TempData["ErrorMessage"] = "You do not have permission to view this page.";
+                return RedirectToAction("MyTasks", "Tasks");
+            }
             ProjectTaskVM vm = new ProjectTaskVM { comments = task.Comments, documents = task.Documents, project = task.Project, task = task};
 
             return View(vm);
@@ -84,6 +125,13 @@ namespace ProjectManagement.Controllers
             foreach (UserProject userProject in userProjects)
             {
                 projectMembers.Add(userProject.Username);
+            }
+            //validate that user is project member or manager before returning create form  
+            var isMember = _context.UserProjects.Any(p => p.ProjectId == id && p.Username == User.Identity.Name);
+            if (_context.Projects.Find(id).ProjectManager != User.Identity.Name && !isMember)
+            {
+                TempData["ErrorMessage"] = "You do not have permission to add task in this project.";
+                return RedirectToAction("Index", "Projects");
             }
             ProjectTaskVM vm = new ProjectTaskVM { project = project, selectedUsers = projectMembers };
             return View(vm);
@@ -115,6 +163,7 @@ namespace ProjectManagement.Controllers
                 //add task
                 _context.Add(task);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Task Created Successfully.";
                 return RedirectToAction(nameof(Index), new {id = vm.project.ProjectId});
             }
 
@@ -151,6 +200,14 @@ namespace ProjectManagement.Controllers
             {
                 projectMembers.Add(userProject.Username);
             }
+            //validate that user is project member or manager before returning task edit form 
+            var isMember = _context.UserProjects.Any(p => p.ProjectId == task.ProjectId && p.Username == User.Identity.Name);
+            if (task.Project.ProjectManager != User.Identity.Name && !isMember)
+            {
+                TempData["ErrorMessage"] = "You do not have permission to edit this task.";
+                return RedirectToAction("MyTasks", "Tasks");
+            }
+
             ProjectTaskVM vm = new ProjectTaskVM { project = project, selectedUsers = projectMembers, task = task };
             ViewData["Status"] = new SelectList(_context.Statuses, "StatusName", "StatusName", task.Status);
             return View(vm);
@@ -195,6 +252,7 @@ namespace ProjectManagement.Controllers
                         throw;
                     }
                 }
+                TempData["SuccessMessage"] = "Task Updated Successfully.";
                 return RedirectToAction(nameof(Index), new {id = project.ProjectId});
             }
             ViewData["AssignedTo"] = new SelectList(_context.Users, "Username", "Username", task.AssignedTo);
@@ -220,7 +278,13 @@ namespace ProjectManagement.Controllers
             {
                 return NotFound();
             }
-
+            //validate that user is project member or manager before returning delete view  
+            var isMember = _context.UserProjects.Any(p => p.ProjectId == task.ProjectId && p.Username == User.Identity.Name);
+            if (task.Project.ProjectManager != User.Identity.Name && !isMember)
+            {
+                TempData["ErrorMessage"] = "You do not have permission to delete this task.";
+                return RedirectToAction("MyTasks", "Tasks");
+            }
             return View(task);
         }
 
@@ -233,14 +297,23 @@ namespace ProjectManagement.Controllers
             {
                 return Problem("Entity set 'ProjectManagementContext.Tasks'  is null.");
             }
-            var task = await _context.Tasks.FindAsync(id);
+            var task = await _context.Tasks.Include(t => t.Documents).Include(t=>t.Comments).FirstAsync(t => t.TaskId == id);
             if (task != null)
             {
+                //remove all documents 
+                 _context.RemoveRange(task.Documents);
+                await _context.SaveChangesAsync();
+
+                //remove all comments 
+                 _context.RemoveRange(task.Comments);
+                await _context.SaveChangesAsync();
+
+                //remove task
                 _context.Tasks.Remove(task);
             }
-            
+            TempData["SuccessMessage"] = "Task Deleted Successfully.";
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index), new {id = task.ProjectId});
         }
 
         private bool TaskExists(int id)
