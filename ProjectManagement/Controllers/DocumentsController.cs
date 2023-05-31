@@ -54,6 +54,41 @@ namespace ProjectManagement.Controllers
 
             return View(document);
         }
+        public IActionResult GetImage(string fileName)
+        {
+            // Construct the full file path
+            string filePath = Path.Combine("wwwroot", fileName);
+
+            // Read the file bytes
+            byte[] fileBytes = System.IO.File.ReadAllBytes(filePath);
+
+            // Determine the content type based on the file extension
+            string contentType = GetContentType(filePath);
+
+            // Return the file as a FileResult
+            return File(fileBytes, contentType);
+        }
+
+        private string GetContentType(string filePath)
+        {
+            // Determine the content type based on the file extension
+            string extension = Path.GetExtension(filePath).ToLowerInvariant();
+            string contentType = "application/octet-stream"; // Default content type
+
+            switch (extension)
+            {
+                case ".jpg":
+                case ".jpeg":
+                    contentType = "image/jpeg";
+                    break;
+                case ".png":
+                    contentType = "image/png";
+                    break;
+                    // Add more cases for other image file formats if needed
+            }
+
+            return contentType;
+        }
 
         // GET: Documents/Create
         public IActionResult Create(int? taskid)
@@ -68,28 +103,25 @@ namespace ProjectManagement.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(DocumentVM documentVM)
+        public async Task<IActionResult> Create(DocumentVM documentVM, [FromServices] IWebHostEnvironment hostingEnvironment)
         {
             if (ModelState.IsValid)
             {
-
                 Document document = new Document();
                 document.TaskId = documentVM.TaskId;
                 document.DocumentName = documentVM.DocumentName;
                 document.DocumentType = documentVM.DocumentType;
                 document.UploadedAt = DateTime.Now;
                 document.UploadedBy = User.Identity.Name;
-                // Get the current directory path
-                string currentDirectory = Directory.GetCurrentDirectory();
-
-                // Combine the current directory with the "Uploads" folder
-                string uploadsFolder = Path.Combine(currentDirectory, "Uploads");
 
                 // Generate a unique file name for the uploaded file
                 string uniqueFileName = Guid.NewGuid().ToString() + "_" + documentVM.uploadedFile.FileName;
 
-                // Construct the file path
-                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                // Combine the uploads folder path with the unique file name
+                string uploadsFolder = Path.Combine("Uploads", uniqueFileName);
+
+                // Construct the file path relative to the wwwroot folder
+                string filePath = Path.Combine(hostingEnvironment.WebRootPath, uploadsFolder);
 
                 // Save the uploaded file to the file system
                 using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
@@ -97,17 +129,19 @@ namespace ProjectManagement.Controllers
                     await documentVM.uploadedFile.CopyToAsync(fileStream);
                 }
 
-                // Store the file path in the document entity
-                document.FilePath = filePath;
+                // Store the relative file path in the document entity
+                document.FilePath = uploadsFolder;
+
                 _context.Add(document);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Document Uploaded Successfully.";
-                return RedirectToAction("Index", new {taskid = document.TaskId});
-                
+                return RedirectToAction("Index", new { taskid = document.TaskId });
             }
-            
+
             return View(documentVM);
         }
+
+
 
         // GET: Documents/Edit/5
         public async Task<IActionResult> Edit(int? id)
