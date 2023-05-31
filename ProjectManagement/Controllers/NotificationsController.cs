@@ -169,6 +169,8 @@ namespace ProjectManagement.Controllers
         // POST: Notifications/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [HttpDelete]
+        [Route("Notifications/Delete/{id}")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             if (_context.Notifications == null)
@@ -180,11 +182,41 @@ namespace ProjectManagement.Controllers
             {
                 _context.Notifications.Remove(notification);
             }
-            
+
             await _context.SaveChangesAsync();
             await NotificationBroadcast();
-            return RedirectToAction(nameof(Index));
+            return Redirect("/Notifications/Client");
         }
+
+
+        [HttpPut]
+        [Route("Notifications/MarkAsRead/{id}")]
+        public async Task<IActionResult> MarkNotificationAsRead(int id)
+        {
+
+            // If the notification doesn't exist return 
+            if (_context.Notifications == null)
+            {
+                return Problem("Entity set 'ProjectManagementContext.Notifications'  is null.");
+            }
+
+            // Find the notification with the specified ID in the database
+            var notification = await _context.Notifications.FindAsync(id);
+            if (notification != null)
+            {
+               notification.IsRead = true; // Mark the notification as read
+                _context.Update(notification);
+                // and save changes to the database
+                 _context.SaveChanges();
+                await NotificationBroadcast();
+            }
+           
+            // Return to the notifications page
+            return Redirect("/Notifications/Client");
+
+            }
+  
+           
 
         private bool NotificationExists(int id)
         {
