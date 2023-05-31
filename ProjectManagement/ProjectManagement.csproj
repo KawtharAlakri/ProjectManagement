@@ -18,4 +18,15 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.13" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\Uploads\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\Uploads\66376688-94b9-409c-bb46-b5358b62e219_festival.jpg" />
+    <None Include="wwwroot\Uploads\6d87a183-ed6d-44d8-9ac7-43e2be308fe0_Hackathon.jpg" />
+    <None Include="wwwroot\Uploads\ceee089a-b985-4634-91e0-c15fa9639803_OIP %282%29.jpeg" />
+    <None Include="wwwroot\Uploads\f6d1e6a5-31dd-4b2d-a83d-0428f198da0c_R %282%29.jpeg" />
+  </ItemGroup>
+
 </Project>

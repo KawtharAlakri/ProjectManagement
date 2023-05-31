@@ -78,8 +78,7 @@
             BindNotificationsToGrid(notifications);
             InvokeNotifications(username); //refresh the notification 
         });
- 
-        
+
         function BindNotificationsToGrid(notifications) {
            console.log(notifications);
             $('#tblNotifications tbody').empty();
@@ -186,6 +185,32 @@
                 }
             });
         };
+
+                tr.append(`<td><button class="btn btn-danger" onclick="DeleteNotification(${JSON.stringify(notification)})">Delete</button></td>`);
+                $('#tblNotifications').append(tr);
+            });
+        };
+
+        
+
+        //function DeleteNotification(notification) {
+        //    console.log('notification: ' + JSON.stringify(notification));
+
+        //    // Send an AJAX request to the server to delete the notification
+        //    $.ajax({
+        //        url: `/Notifications/DeleteNotification/${notification.id}`,
+        //        type: 'POST',
+        //        data: { id: notification.id },
+        //        success: function (result) {
+        //            console.log('DeleteNotification success');
+        //            // Refresh the notifications table
+        //            InvokeNotifications();
+        //        },
+        //        error: function (xhr, status, error) {
+        //            console.log('DeleteNotification error: ' + error);
+        //        }
+        //    });
+        //}
     </script>
 
 

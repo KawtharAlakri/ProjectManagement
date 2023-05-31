@@ -5,8 +5,21 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Index</h1>
-<p style="color:darkred">@TempData["ErrorMessage"]</p>
+<h1>My Projects</h1>
+@if (TempData.ContainsKey("ErrorMessage") && !String.IsNullOrEmpty(TempData["ErrorMessage"].ToString()))
+{
+    <div class="alert alert-dismissible alert-danger">
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <strong>@TempData["ErrorMessage"] </strong>
+    </div>
+}
+@if (TempData.ContainsKey("SuccessMessage") && !String.IsNullOrEmpty(TempData["SuccessMessage"].ToString()))
+{
+    <div class="alert alert-dismissible alert-success">
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <strong>@TempData["SuccessMessage"]</strong>
+    </div>
+}
 <p>
     <a asp-action="Create">Create New</a>
 </p>
@@ -22,7 +35,21 @@
     <input type="submit" value="Filter"/>
     <a asp-action="Index" asp-controller="Projects">Clear</a>
 </form>
-
+@foreach (var item in Model){
+    <div class="card" style="max-width: 20rem;">
+    <div class="card-body">
+        <h4 class="card-title">@item.ProjectName</h4>
+        <h6 class="card-subtitle mb-2 text-muted">@item.ProjectManager</h6> <span class="badge rounded-pill bg-secondary">@item.Status</span>
+        <p class="card-text">@item.Description</p>
+            @if (item.ProjectManager == User.Identity.Name)
+            {
+                <a asp-action="Edit" asp-route-id="@item.ProjectId" class="card-link">Edit</a> 
+                <a asp-action="Delete" asp-route-id="@item.ProjectId" class="card-link"> Delete </a>
+            }
+    </div>
+</div>
+}
+@*
 <table class="table">
     <thead>
         <tr>
@@ -106,4 +133,4 @@
             </tr>
         }
     </tbody>
-</table>
+</table>*@

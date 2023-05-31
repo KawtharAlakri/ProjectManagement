@@ -1,0 +1,31 @@
+﻿@model ProjectManagement.Models.Comment
+
+@{
+    ViewData["Title"] = "Delete";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="modal fade" id="deleteConfirmationModal" tabindex="-1" role="dialog" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteConfirmationModalLabel">Delete Confirmation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the comment written by @Model.Author.Username?</p>
+            </div>
+            <div class="modal-footer">
+                <form asp-action="Delete" asp-controller="Comments">
+                    <input type="hidden" asp-for="CommentId" />
+                    <input type="submit" value="Delete" class="btn btn-danger" />
+                    <a asp-action="Details" asp-controller="Tasks" asp-route-id="@Model.TaskId" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal">Delete Comment</button>

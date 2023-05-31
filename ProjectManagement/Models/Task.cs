@@ -29,7 +29,7 @@ namespace ProjectManagement.Models
         [Column("description")]
         [StringLength(255)]
         [Unicode(false)]
-        public string Description { get; set; } 
+        public string? Description { get; set; } 
         [Column("created_at", TypeName = "date")]
         [Display(Name = "Created At")]
         public DateTime CreatedAt { get; set; }
@@ -55,8 +55,8 @@ namespace ProjectManagement.Models
         [Display(Name = "Status")]
         public virtual Status StatusNavigation { get; set; } = null!;
         [InverseProperty("Task")]
-        public virtual ICollection<Comment> Comments { get; set; }
+        public virtual ICollection<Comment>? Comments { get; set; }
         [InverseProperty("Task")]
-        public virtual ICollection<Document> Documents { get; set; }
+        public virtual ICollection<Document>? Documents { get; set; }
     }
 }
