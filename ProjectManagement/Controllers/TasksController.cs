@@ -24,7 +24,7 @@ namespace ProjectManagement.Controllers
         }
 
         // GET: Tasks
-        public async Task<IActionResult> Index(int? id)
+        public async Task<IActionResult> Index(int? id, string sreachString, string filterBy, string statusFilter)
         {
             IQueryable<Models.Task> tasksContext = _context.Tasks.Include(t => t.AssignedToNavigation).Include(t => t.Project).Include(t => t.StatusNavigation);
             //display tasks for a project
@@ -43,6 +43,21 @@ namespace ProjectManagement.Controllers
                     return RedirectToAction("Index", "Projects");
                 }
             }
+
+            //apply any filtering 
+            if (!String.IsNullOrEmpty(sreachString))
+            {
+                tasksContext = tasksContext.Where(x => x.TaskName.Contains(sreachString));
+            }
+            else if (filterBy == "me")
+            {
+                tasksContext = tasksContext.Where(x => x.AssignedTo == User.Identity.Name);
+            }
+            else if (!String.IsNullOrEmpty(statusFilter))
+            {
+                tasksContext = tasksContext.Where(x => x.Status == statusFilter);
+            }
+
             return View(await tasksContext.ToListAsync());
         }
 
@@ -111,7 +126,7 @@ namespace ProjectManagement.Controllers
                 TempData["ErrorMessage"] = "You do not have permission to view this page.";
                 return RedirectToAction("MyTasks", "Tasks");
             }
-            ProjectTaskVM vm = new ProjectTaskVM { comments = task.Comments, documents = task.Documents, project = task.Project, task = task};
+            TaskDetailsVM vm = new TaskDetailsVM { comments = task.Comments, documents = task.Documents, project = task.Project, task = task};
 
             return View(vm);
         }
@@ -133,7 +148,7 @@ namespace ProjectManagement.Controllers
                 TempData["ErrorMessage"] = "You do not have permission to add task in this project.";
                 return RedirectToAction("Index", "Projects");
             }
-            ProjectTaskVM vm = new ProjectTaskVM { project = project, selectedUsers = projectMembers };
+            TaskDetailsVM vm = new TaskDetailsVM { project = project, selectedUsers = projectMembers };
             return View(vm);
         }
 
@@ -142,7 +157,7 @@ namespace ProjectManagement.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(ProjectTaskVM vm)
+        public async Task<IActionResult> Create(TaskDetailsVM vm)
         {
             Models.Task task = vm.task;
             vm.project = _context.Projects.Find(vm.project.ProjectId);
@@ -163,6 +178,9 @@ namespace ProjectManagement.Controllers
                 //add task
                 _context.Add(task);
                 await _context.SaveChangesAsync();
+
+                //log user action
+                LogsController.ActionLogChanges(User.Identity.Name, task, EntityState.Added, ControllerContext, _context);
 
                 TempData["SuccessMessage"] = "Task Created Successfully.";
 
@@ -216,7 +234,7 @@ namespace ProjectManagement.Controllers
                 return RedirectToAction("MyTasks", "Tasks");
             }
 
-            ProjectTaskVM vm = new ProjectTaskVM { project = project, selectedUsers = projectMembers, task = task };
+            TaskDetailsVM vm = new TaskDetailsVM { project = project, selectedUsers = projectMembers, task = task };
             ViewData["Status"] = new SelectList(_context.Statuses, "StatusName", "StatusName", task.Status);
             return View(vm);
         }
@@ -226,7 +244,7 @@ namespace ProjectManagement.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(ProjectTaskVM vm)
+        public async Task<IActionResult> Edit(TaskDetailsVM vm)
         {
             Models.Task task = vm.task;
             vm.project = _context.Projects.Find(vm.project.ProjectId);
@@ -248,6 +266,9 @@ namespace ProjectManagement.Controllers
                 {
                     _context.Update(task);
                     await _context.SaveChangesAsync();
+
+                    //log user action
+                    LogsController.ActionLogChanges(User.Identity.Name, task, EntityState.Modified, ControllerContext, _context);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -319,8 +340,12 @@ namespace ProjectManagement.Controllers
                 //remove task
                 _context.Tasks.Remove(task);
             }
-            TempData["SuccessMessage"] = "Task Deleted Successfully.";
             await _context.SaveChangesAsync();
+
+            //log user action
+            LogsController.ActionLogChanges(User.Identity.Name, task, EntityState.Deleted, ControllerContext, _context);
+
+            TempData["SuccessMessage"] = "Task Deleted Successfully.";
             return RedirectToAction(nameof(Index), new {id = task.ProjectId});
         }
 
