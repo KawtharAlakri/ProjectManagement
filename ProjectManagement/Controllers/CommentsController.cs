@@ -51,8 +51,6 @@ namespace ProjectManagement.Controllers
         // GET: Comments/Create
         public IActionResult Create()
         {
-            //ViewData["AuthorId"] = new SelectList(_context.Users, "Username", "Username");
-            //ViewData["TaskId"] = new SelectList(_context.Tasks, "TaskId", "TaskId");
             return View();
         }
 
@@ -63,23 +61,31 @@ namespace ProjectManagement.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("CommentId,CommentText,PostedAt,TaskId,AuthorId")] Comment comment)
         {
-            //fill the comment object
+            //fill all properties of the comment 
             comment.Author = _context.Users.Find(User.Identity.Name);
             comment.AuthorId = User.Identity.Name;
             comment.PostedAt = DateTime.Now;
             comment.Task = _context.Tasks.Include(t => t.StatusNavigation).Include(t => t.Project).Include(t => t.AssignedToNavigation).FirstOrDefault(t => t.TaskId == comment.TaskId);
-
-            //fill project object 
             comment.Task.Project = _context.Projects.Include(p => p.ProjectManagerNavigation).Include(p => p.StatusNavigation).FirstOrDefault(p => p.ProjectId == comment.Task.ProjectId);
+            
+            //re validate 
             ModelState.Clear();
             TryValidateModel(comment);
+            
             if (ModelState.IsValid)
             {
+                //add comment and return success message
                 _context.Add(comment);
                 await _context.SaveChangesAsync();
+
+                //log user action
+                LogsController.ActionLogChanges(User.Identity.Name, comment, EntityState.Added, ControllerContext, _context);
+
                 TempData["SuccessMessage"] = "Your comment has been added successfully.";
                 return RedirectToAction("Details", "Tasks", new { id = comment.TaskId }); //first parameter is the action, then controller, then action parameter
             }
+
+            //return error message 
             TempData["ErrorMessage"] = "An error occurred, try adding your comment again.";
             return RedirectToAction("Details", "Tasks", new { id = comment.TaskId }); //first parameter is the action, then controller, then action parameter
         }
@@ -114,27 +120,25 @@ namespace ProjectManagement.Controllers
                 return NotFound();
             }
 
-            //fill the comment object
+            //fill all properties for the comment object 
             comment.Author = _context.Users.Find(comment.AuthorId);
             comment.Task = _context.Tasks.Include(t => t.StatusNavigation).Include(t => t.Project).Include(t => t.AssignedToNavigation).FirstOrDefault(t => t.TaskId == comment.TaskId);
-
-            ////fill the task object  
-            //comment.Task.Project = _context.Projects.Find(comment.Task.ProjectId);
-            //comment.Task.AssignedToNavigation = _context.Users.Find(comment.Task.AssignedTo);
-            //comment.Task.StatusNavigation = _context.Statuses.Find(comment.Task.Status);
-
-            //fill project object 
             comment.Task.Project = _context.Projects.Include(p=>p.ProjectManagerNavigation).Include(p=>p.StatusNavigation).FirstOrDefault(p=>p.ProjectId == comment.Task.ProjectId);
 
+            //re validate the model state 
             ModelState.Clear();
             TryValidateModel(comment);
             if (ModelState.IsValid)
             {
                 try
                 {
+                    //update comment 
                     _context.Update(comment);
                     await _context.SaveChangesAsync();
-                   
+
+                    //log user action
+                    LogsController.ActionLogChanges(User.Identity.Name, comment, EntityState.Modified, ControllerContext, _context);
+
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -147,9 +151,12 @@ namespace ProjectManagement.Controllers
                         throw;
                     }
                 }
+                //redirect to task details (where comments listed) and return success message 
                 TempData["SuccessMessage"] = "Your comment has been updated successfully.";
                 return RedirectToAction("Details", "Tasks", new { id = comment.TaskId });
             }
+
+            //stay at the samem page and show error message 
             TempData["ErrorMessage"] = "An error occurred, try updating your comment again.";
             return View(comment);
         }
@@ -190,6 +197,10 @@ namespace ProjectManagement.Controllers
             }
             
             await _context.SaveChangesAsync();
+
+            //log user action
+            LogsController.ActionLogChanges(User.Identity.Name, comment, EntityState.Deleted, ControllerContext, _context);
+
             TempData["SuccessMessage"] = "Comment Deleted Successfully.";
             return RedirectToAction("Details", "Tasks", new { id = comment.TaskId });
         }

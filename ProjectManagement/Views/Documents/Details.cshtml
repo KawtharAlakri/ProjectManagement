@@ -33,7 +33,7 @@
             @Html.DisplayNameFor(model => model.Task)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Task.TaskId)
+            @Html.DisplayFor(model => model.Task.TaskName)
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.UploadedByNavigation)
@@ -46,6 +46,17 @@
         {
             <dd>
                 <img src="@Url.Action("GetImage", "Documents", new { fileName = @Model.FilePath })" />
+            </dd>
+        }
+        else
+        {
+            //display a tag with link to download the file
+            <dd>
+                @if (!string.IsNullOrEmpty(Model.FilePath))
+                {
+                    string fileUrl = Url.Action("GetFile", "Documents", new { fileName = Model.FilePath });
+                    <a href="@fileUrl" target="_blank">Download File</a> 
+                }
             </dd>
         }
 

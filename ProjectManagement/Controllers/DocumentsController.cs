@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting.Internal;
 using ProjectManagement.Models;
 using ProjectManagement.ViewModels;
 
@@ -54,6 +55,40 @@ namespace ProjectManagement.Controllers
 
             return View(document);
         }
+
+        public IActionResult GetFile(string fileName)
+        {
+            // Get the file extension
+            string fileExtension = Path.GetExtension(fileName).ToLower();
+
+            // Set the MIME type based on the file extension
+            string mimeType;
+            switch (fileExtension)
+            {
+                case ".pdf":
+                    mimeType = "application/pdf";
+                    break;
+                case ".doc":
+                case ".docx":
+                    mimeType = "application/msword";
+                    break;
+                case ".xls":
+                case ".xlsx":
+                    mimeType = "application/vnd.ms-excel";
+                    break;
+                case ".ppt":
+                case ".pptx":
+                    mimeType = "application/vnd.ms-powerpoint";
+                    break;
+                default:
+                    mimeType = "application/octet-stream"; // Default MIME type for unknown file types
+                    break;
+            }
+
+            return File(fileName, mimeType, Path.GetFileName(fileName));
+        }
+
+
         public IActionResult GetImage(string fileName)
         {
             // Construct the full file path
@@ -84,7 +119,9 @@ namespace ProjectManagement.Controllers
                 case ".png":
                     contentType = "image/png";
                     break;
-                    // Add more cases for other image file formats if needed
+                case ".gif":
+                    contentType = "image/gif";
+                    break;
             }
 
             return contentType;
@@ -110,7 +147,6 @@ namespace ProjectManagement.Controllers
                 Document document = new Document();
                 document.TaskId = documentVM.TaskId;
                 document.DocumentName = documentVM.DocumentName;
-                document.DocumentType = documentVM.DocumentType;
                 document.UploadedAt = DateTime.Now;
                 document.UploadedBy = User.Identity.Name;
 
@@ -132,8 +168,25 @@ namespace ProjectManagement.Controllers
                 // Store the relative file path in the document entity
                 document.FilePath = uploadsFolder;
 
-                _context.Add(document);
+                // Get the file extension from the uploaded file
+                string fileExtension = Path.GetExtension(documentVM.uploadedFile.FileName).ToLower();
+
+                // Determine the document type based on the file extension
+                if (IsImageFile(fileExtension))
+                {
+                    document.DocumentType = "Photo";
+                }
+                else
+                {
+                    document.DocumentType = "File";
+                }
+
+                    _context.Add(document);
                 await _context.SaveChangesAsync();
+
+                //log user action
+                LogsController.ActionLogChanges(User.Identity.Name, document, EntityState.Added, ControllerContext, _context);
+
                 TempData["SuccessMessage"] = "Document Uploaded Successfully.";
                 return RedirectToAction("Index", new { taskid = document.TaskId });
             }
@@ -141,7 +194,12 @@ namespace ProjectManagement.Controllers
             return View(documentVM);
         }
 
-
+        private bool IsImageFile(string fileExtension)
+        {
+            string[] imageExtensions = { ".jpg", ".jpeg", ".png", ".gif" };
+            return imageExtensions.Contains(fileExtension);
+        }
+     
 
         // GET: Documents/Edit/5
         public async Task<IActionResult> Edit(int? id)
@@ -179,6 +237,9 @@ namespace ProjectManagement.Controllers
                 {
                     _context.Update(document);
                     await _context.SaveChangesAsync();
+
+                    //log user action
+                    LogsController.ActionLogChanges(User.Identity.Name, document, EntityState.Modified, ControllerContext, _context);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -234,6 +295,10 @@ namespace ProjectManagement.Controllers
             }
             
             await _context.SaveChangesAsync();
+
+            //log user action
+            LogsController.ActionLogChanges(User.Identity.Name, document, EntityState.Deleted, ControllerContext, _context);
+
             TempData["SuccessMessage"] = "Document Deleted Successfully.";
             return RedirectToAction(nameof(Index), new { taskid = document.TaskId });
         }

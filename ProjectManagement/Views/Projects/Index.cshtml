@@ -4,8 +4,7 @@
     ViewData["Title"] = "Index";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-
-<h1>My Projects</h1>
+<h1 class="mt-4">My Projects</h1>
 @if (TempData.ContainsKey("ErrorMessage") && !String.IsNullOrEmpty(TempData["ErrorMessage"].ToString()))
 {
     <div class="alert alert-dismissible alert-danger">
@@ -20,40 +19,52 @@
         <strong>@TempData["SuccessMessage"]</strong>
     </div>
 }
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<form asp-action="Index" asp-controller="Projects" method="get">
-    <input type="text" name="searchString" placeholder="Search by project name.." value="@ViewBag.searchString" />
-    <label>Projects where I am:</label>
-    <input type="radio" name="filterBy" value="member" @(ViewBag.filterBy == "member" ? "checked" : "") />
-    <label for="filterMember">Member</label>
-    <input type="radio" name="filterBy" value="manager" @(ViewBag.filterBy == "manager" ? "checked" : "") />
-    <label for="filterManager">Manager</label>
-    <label> Status </label>
-    <select name="statusFilter" asp-items="ViewBag.Status"></select>
-    <input type="submit" value="Filter"/>
-    <a asp-action="Index" asp-controller="Projects">Clear</a>
-</form>
-@foreach (var item in Model){
-    
-    <div class="card" style="max-width: 20rem;">
-        <a asp-action="View" asp-route-id="@item.ProjectId">
-    <div class="card-body">
-        <h4 class="card-title">@item.ProjectName</h4>
-        <h6 class="card-subtitle mb-2 text-muted">@item.ProjectManager</h6> <span class="badge rounded-pill bg-secondary">@item.Status</span>
-        <p class="card-text">@item.Description</p>
-            @if (item.ProjectManager == User.Identity.Name)
-            {
-                <a asp-action="Edit" asp-route-id="@item.ProjectId" class="card-link">Edit</a> 
-                <a asp-action="Delete" asp-route-id="@item.ProjectId" class="card-link"> Delete </a>
-                <a asp-controller="Tasks" asp-action="Index" asp-route-id="@item.ProjectId">Tasks</a>
-            }
-    </div>
-        </a>
+
+
+
+<div class="row">
+    @foreach (var item in Model)
+    {
+        <div class="col-md-4 mb-3">
+           <a asp-action="View" asp-route-id="@item.ProjectId">
+            <div class="card bg-light" style="max-width: 20rem;">
+              
+                <a asp-action="Details" asp-route-id="@item.ProjectId" class="card-link" style="text-decoration: none; color: inherit;">
+                <div class="card-body">
+                      <h4 class="card-title">@item.ProjectName</h4>
+                        @*<h6 class="card-subtitle mb-2 text-muted">@item.ProjectManager</h6> *@
+                    <span class="badge @GetBadgeClass(item.Status)">@item.Status</span>
+                    <p class="card-text">@item.Description</p>
+                        <a asp-controller="Tasks" asp-action="Index" asp-route-id="@item.ProjectId" style="color:#3498db">Tasks</a>
+                    @if (item.ProjectManager == User.Identity.Name)
+                    {
+                            <text>|</text> <a asp-action="Edit" asp-route-id="@item.ProjectId" style="color:#3498db">Edit</a>
+                            <text>|</text>  <a asp-action="Delete" asp-route-id="@item.ProjectId" style="color:#3498db">Delete</a>
+                    }
+                </div>
+                </a>
+            </div>
+               </a>
+        </div>
+    }
 </div>
-   
+@functions {
+    public string GetBadgeClass(string status)
+    {
+        switch (status.ToLower())
+        {
+            case "completed":
+                return "badge bg-success";
+            case "overdue":
+                return "badge bg-danger";
+            case "in progress":
+                return "badge bg-warning";
+            default:
+                return "badge";
+        }
+    }
 }
+
 @*
 <table class="table">
     <thead>

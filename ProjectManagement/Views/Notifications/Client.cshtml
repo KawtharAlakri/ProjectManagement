@@ -78,7 +78,6 @@
             BindNotificationsToGrid(notifications);
             InvokeNotifications(username); //refresh the notification 
         });
- 
 
         function BindNotificationsToGrid(notifications) {
            console.log(notifications);
@@ -86,11 +85,107 @@
 
             var tr;
             $.each(notifications, function (index, notification) {
-                tr = $('<tr/>');
-                tr.append(`<td>${(index + 1)}</td>`);
+                var tr = $('<tr/>');
+
+                tr.append(`<td>${index + 1}</td>`);
                 tr.append(`<td>${notification.notificationText}</td>`);
                 tr.append(`<td>${new Date(notification.generatedAt).toLocaleString()}</td>`);
                 tr.append(`<td>${notification.isRead ? "Read" : "Not read"}</td>`);
+
+                var form = $('<form/>', {
+                    action: `/Notifications/Delete/${notification.notificationId}`,
+                    method: 'POST'
+                });
+
+                var deleteButton = $('<button/>', {
+                    text: 'Delete',
+                    class: 'btn btn-danger',
+                    click: function () {
+                        DeleteNotification(notification.notificationId);
+                    }
+                });
+                var markAsReadButton = $('<button/>', {
+                    text: 'Mark as Read',
+                    class: 'btn btn-primary',
+                    click: function () {
+                        MarkNotificationAsRead(notification.notificationId);
+                    },
+                    disabled: notification.isRead // Disable the button if the notification is already read
+                });
+
+                var antiForgeryToken = $('input:hidden[name="__RequestVerificationToken"]').val();
+                var antiForgeryInput = $('<input/>', {
+                    type: 'hidden',
+                    name: '__RequestVerificationToken',
+                    value: antiForgeryToken
+                });
+
+                form.append(deleteButton);
+                form.append(antiForgeryInput);
+                tr.append($('<td>').append(form));
+                var markAsReadTd = $('<td/>');
+                markAsReadTd.append(markAsReadButton);
+                tr.append(markAsReadTd);
+
+                $('#tblNotifications').append(tr);
+            });
+        };
+
+
+
+
+
+        function DeleteNotification(id) {
+            console.log('Deleting notification with ID: ' + id);
+
+            // Send an AJAX request to the server to delete the notification
+            $.ajax({
+                url: `/Notifications/Delete/${id}`,
+                type: 'DELETE',
+                data: { id: id },
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("X-CSRF-TOKEN",
+                        $('input:hidden[name="__RequestVerificationToken"]').val());
+                },
+                success: function (result) {
+                    
+                        // Handle the success response and perform any necessary actions
+                        alert('Delete successful!');
+                        InvokeNotifications(username); //refresh the notification
+                    
+                     
+                },
+                error: function (error) {
+                    console.log('Error deleting notification:');
+                    console.log(error);
+                }
+            });
+        };
+
+
+        function MarkNotificationAsRead(notificationId) {
+            console.log('Marking notification as read with ID: ' + notificationId);
+
+            // Send an AJAX request to the server to mark the notification as read
+            $.ajax({
+                url: `/Notifications/MarkAsRead/${notificationId}`,
+                type: 'PUT',
+                data: { id: notificationId },
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("X-CSRF-TOKEN",
+                        $('input:hidden[name="__RequestVerificationToken"]').val());
+                },
+                success: function (result) {
+                    console.log('Notification marked as read successfully!');
+                    LoadNotifications();
+                },
+                error: function (error) {
+                    console.log('Error marking notification as read:');
+                    console.log(error);
+                }
+            });
+        };
+
                 tr.append(`<td><button class="btn btn-danger" onclick="DeleteNotification(${JSON.stringify(notification)})">Delete</button></td>`);
                 $('#tblNotifications').append(tr);
             });
