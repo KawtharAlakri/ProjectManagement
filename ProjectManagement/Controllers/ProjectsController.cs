@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using NuGet.Packaging.Signing;
 using ProjectManagement.Models;
 using ProjectManagement.ViewModels;
 
@@ -26,6 +28,7 @@ namespace ProjectManagement.Controllers
         // GET: Projects
         public async Task<IActionResult> Index(string searchString, string filterBy, string statusFilter)
         {
+
             //get the full project context with projects that user is manager of or a member in 
             IQueryable<Project> fullProjectsContext = _context.Projects
                                    .Include(p => p.ProjectManagerNavigation)
@@ -64,7 +67,6 @@ namespace ProjectManagement.Controllers
         // GET: Projects/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            
             if (id == null || _context.Projects == null)
             {
                 return NotFound();
@@ -124,7 +126,6 @@ namespace ProjectManagement.Controllers
             {
                 _context.Projects.Add(project);
                 await _context.SaveChangesAsync();
-
                 // Add users to the UserProject table
                 if (viewModel.selectedUsers != null && viewModel.selectedUsers.Count() > 0)
                 {
@@ -143,6 +144,10 @@ namespace ProjectManagement.Controllers
                     }
                     await _context.SaveChangesAsync();
                 }
+
+                //log user action
+                LogsController.ActionLogChanges(User.Identity.Name, project, EntityState.Added, ControllerContext, _context);
+
                 TempData["SuccessMessage"] = "Project Created Successfully.";
                 return RedirectToAction(nameof(Index));
             }
@@ -200,7 +205,7 @@ namespace ProjectManagement.Controllers
             {
                 try
                 {
-                    // close the existing DataReader
+                    // close any existing DataReader
                     await _context.Database.CloseConnectionAsync();
 
                     // Check if the project status has changed
@@ -209,6 +214,9 @@ namespace ProjectManagement.Controllers
                     /// update the project
                     _context.Update(viewModel.project);
                     await _context.SaveChangesAsync();
+
+                    //log user action
+                    LogsController.ActionLogChanges(User.Identity.Name, viewModel.project, EntityState.Modified, ControllerContext, _context);
 
                     // Check if the project status has changed
                     var currentStatus = viewModel.project.Status;
@@ -221,7 +229,7 @@ namespace ProjectManagement.Controllers
                
                     }
 
-                    //update project members (remove all and insert again) ? 
+                    //update project members (remove all and insert again) 
                     var records = _context.UserProjects.Where(p => p.ProjectId == viewModel.project.ProjectId);
                     _context.UserProjects.RemoveRange(records);
                     //insert 
@@ -316,6 +324,9 @@ namespace ProjectManagement.Controllers
                 //delete the project itself 
                 _context.Projects.Remove(project);
                 await _context.SaveChangesAsync();
+
+                //log user action
+                LogsController.ActionLogChanges(User.Identity.Name, project, EntityState.Deleted, ControllerContext, _context);
             }
             TempData["SuccessMessage"] = "Project Deleted Successfully.";
             return RedirectToAction(nameof(Index));

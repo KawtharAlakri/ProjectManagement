@@ -2,7 +2,7 @@
 
 namespace ProjectManagement.ViewModels
 {
-    public class ProjectTaskVM
+    public class TaskDetailsVM
     {
         public Models.Task task { get; set; }
         public List<string> selectedUsers { get; set; }

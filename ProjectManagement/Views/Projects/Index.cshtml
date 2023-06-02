@@ -4,8 +4,7 @@
     ViewData["Title"] = "Index";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-
-<h1>My Projects</h1>
+<h1 class="mt-4">My Projects</h1>
 @if (TempData.ContainsKey("ErrorMessage") && !String.IsNullOrEmpty(TempData["ErrorMessage"].ToString()))
 {
     <div class="alert alert-dismissible alert-danger">
@@ -20,35 +19,95 @@
         <strong>@TempData["SuccessMessage"]</strong>
     </div>
 }
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<form asp-action="Index" asp-controller="Projects" method="get">
-    <input type="text" name="searchString" placeholder="Search by project name.." value="@ViewBag.searchString" />
-    <label>Projects where I am:</label>
-    <input type="radio" name="filterBy" value="member" @(ViewBag.filterBy == "member" ? "checked" : "") />
-    <label for="filterMember">Member</label>
-    <input type="radio" name="filterBy" value="manager" @(ViewBag.filterBy == "manager" ? "checked" : "") />
-    <label for="filterManager">Manager</label>
-    <label> Status </label>
-    <select name="statusFilter" asp-items="ViewBag.Status"></select>
-    <input type="submit" value="Filter"/>
-    <a asp-action="Index" asp-controller="Projects">Clear</a>
-</form>
-@foreach (var item in Model){
-    <div class="card" style="max-width: 20rem;">
-    <div class="card-body">
-        <h4 class="card-title">@item.ProjectName</h4>
-        <h6 class="card-subtitle mb-2 text-muted">@item.ProjectManager</h6> <span class="badge rounded-pill bg-secondary">@item.Status</span>
-        <p class="card-text">@item.Description</p>
-            @if (item.ProjectManager == User.Identity.Name)
-            {
-                <a asp-action="Edit" asp-route-id="@item.ProjectId" class="card-link">Edit</a> 
-                <a asp-action="Delete" asp-route-id="@item.ProjectId" class="card-link"> Delete </a>
-            }
+<div class="row">
+    <div class="col-md-6">
+        <div class="card border-0 mb-4">
+            <div class="card-body d-flex align-items-center border-bottom">
+                                <form asp-action="Index" asp-controller="Projects" method="get" class="d-flex">
+
+                <div class="input-group me-3">
+                    <input type="text" name="searchString" class="form-control" placeholder="Search by project name.." value="@ViewBag.searchString" />
+                        <button class="btn btn-outline-secondary" type="submit">Search</button>
+                </div>
+                    <div class="dropdown">
+                        <button class="btn btn-light dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-funnel"></i> Filter
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="filterDropdown">
+                            <li>
+                                <h6 class="dropdown-header text-info">Projects Where I am </h6>
+                                <ul class="list-unstyled">
+                                    <li><a class="dropdown-item" asp-action="Index" asp-controller="Projects" asp-route-filterBy="member">Member</a></li>
+                                    <li><a class="dropdown-item" asp-action="Index" asp-controller="Projects" asp-route-filterBy="manager">Manager</a></li>
+                                </ul>
+                            </li>
+                            <li>
+                                <h6 class="dropdown-header text-info">Projects With Status</h6>
+                                <ul class="list-unstyled">
+                                    <li><a class="dropdown-item" asp-action="Index" asp-controller="Projects" asp-route-statusFilter="completed">Completed</a></li>
+                                    <li><a class="dropdown-item" asp-action="Index" asp-controller="Projects" asp-route-statusFilter="overdue">Overdue</a></li>
+                                    <li><a class="dropdown-item" asp-action="Index" asp-controller="Projects" asp-route-statusFilter="in progress">In Progress</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="ms-3">
+                        <a asp-action="Index" asp-controller="Projects" class="btn btn-light">Reset</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 text-end">
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus"></i> Create Project
+        </a>
     </div>
 </div>
+
+
+
+
+<div class="row">
+    @foreach (var item in Model)
+    {
+        <div class="col-md-4 mb-3">
+            <div class="card bg-light" style="max-width: 20rem;">
+                <a asp-action="Details" asp-route-id="@item.ProjectId" class="card-link" style="text-decoration: none; color: inherit;">
+                <div class="card-body">
+                      <h4 class="card-title">@item.ProjectName</h4>
+                        @*<h6 class="card-subtitle mb-2 text-muted">@item.ProjectManager</h6> *@
+                    <span class="badge @GetBadgeClass(item.Status)">@item.Status</span>
+                    <p class="card-text">@item.Description</p>
+                        <a asp-controller="Tasks" asp-action="Index" asp-route-id="@item.ProjectId" style="color:#3498db">Tasks</a>
+                    @if (item.ProjectManager == User.Identity.Name)
+                    {
+                            <text>|</text> <a asp-action="Edit" asp-route-id="@item.ProjectId" style="color:#3498db">Edit</a>
+                            <text>|</text>  <a asp-action="Delete" asp-route-id="@item.ProjectId" style="color:#3498db">Delete</a>
+                    }
+                </div>
+                </a>
+            </div>
+        </div>
+    }
+</div>
+@functions {
+    public string GetBadgeClass(string status)
+    {
+        switch (status.ToLower())
+        {
+            case "completed":
+                return "badge bg-success";
+            case "overdue":
+                return "badge bg-danger";
+            case "in progress":
+                return "badge bg-warning";
+            default:
+                return "badge";
+        }
+    }
 }
+
 @*
 <table class="table">
     <thead>
