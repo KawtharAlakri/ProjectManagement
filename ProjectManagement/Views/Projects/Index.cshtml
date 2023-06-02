@@ -19,52 +19,6 @@
         <strong>@TempData["SuccessMessage"]</strong>
     </div>
 }
-<div class="row">
-    <div class="col-md-6">
-        <div class="card border-0 mb-4">
-            <div class="card-body d-flex align-items-center border-bottom">
-                                <form asp-action="Index" asp-controller="Projects" method="get" class="d-flex">
-
-                <div class="input-group me-3">
-                    <input type="text" name="searchString" class="form-control" placeholder="Search by project name.." value="@ViewBag.searchString" />
-                        <button class="btn btn-outline-secondary" type="submit">Search</button>
-                </div>
-                    <div class="dropdown">
-                        <button class="btn btn-light dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-funnel"></i> Filter
-                        </button>
-                        <ul class="dropdown-menu" aria-labelledby="filterDropdown">
-                            <li>
-                                <h6 class="dropdown-header text-info">Projects Where I am </h6>
-                                <ul class="list-unstyled">
-                                    <li><a class="dropdown-item" asp-action="Index" asp-controller="Projects" asp-route-filterBy="member">Member</a></li>
-                                    <li><a class="dropdown-item" asp-action="Index" asp-controller="Projects" asp-route-filterBy="manager">Manager</a></li>
-                                </ul>
-                            </li>
-                            <li>
-                                <h6 class="dropdown-header text-info">Projects With Status</h6>
-                                <ul class="list-unstyled">
-                                    <li><a class="dropdown-item" asp-action="Index" asp-controller="Projects" asp-route-statusFilter="completed">Completed</a></li>
-                                    <li><a class="dropdown-item" asp-action="Index" asp-controller="Projects" asp-route-statusFilter="overdue">Overdue</a></li>
-                                    <li><a class="dropdown-item" asp-action="Index" asp-controller="Projects" asp-route-statusFilter="in progress">In Progress</a></li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="ms-3">
-                        <a asp-action="Index" asp-controller="Projects" class="btn btn-light">Reset</a>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6 text-end">
-        <a asp-action="Create" class="btn btn-primary">
-            <i class="bi bi-plus"></i> Create Project
-        </a>
-    </div>
-</div>
-
 
 
 
@@ -72,7 +26,9 @@
     @foreach (var item in Model)
     {
         <div class="col-md-4 mb-3">
+           <a asp-action="View" asp-route-id="@item.ProjectId">
             <div class="card bg-light" style="max-width: 20rem;">
+              
                 <a asp-action="Details" asp-route-id="@item.ProjectId" class="card-link" style="text-decoration: none; color: inherit;">
                 <div class="card-body">
                       <h4 class="card-title">@item.ProjectName</h4>
@@ -88,6 +44,7 @@
                 </div>
                 </a>
             </div>
+               </a>
         </div>
     }
 </div>
