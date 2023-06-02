@@ -3,122 +3,80 @@
 @{
     ViewData["Title"] = "Details";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["ActiveTab"] = "Details"; // Set the active tab based on the current page
 }
 
-<h1>@Model.project.ProjectName</h1>
+@Html.Partial("_projectTabs", Model.project)
 
-<div>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.project.ProjectName)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.project.ProjectName)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.project.CreatedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.project.CreatedAt)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.project.DueDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.project.DueDate)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.project.Budget)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.project.Budget)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.project.Description)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.project.Description)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.project.ProjectManagerNavigation)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.project.ProjectManagerNavigation.Username)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.project.StatusNavigation)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.project.StatusNavigation.StatusName)
-        </dd>
-        <dt class="col-sm-2">
-           Project Members
-        </dt>
-        @foreach (UserProject member in Model.project.UserProjects) {
-        <dd class="col-sm-10">
-                @member.Username
-        </dd>
-        }
-    </dl>
-</div>
-<div>
-    <h4>Tasks:</h4>
-    <table class="table">
-        <thead>
-            <tr>
-
-                <th>
-                    Content
-                </th>
-                <th>
-                    Written By
-                </th>
-                <th>
-                    Posted At
-                </th>
-                <th></th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model.project.Tasks)
-            {
-                <tr>
-
-                    <td>
-                        @Html.DisplayFor(modelItem => item.TaskName)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.Description)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.AssignedTo)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.CreatedAt)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.DueDate)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.Status)
-                    </td>
-                    <td>
-                    <td>
-                        <a asp-action="Details" asp-controller="Tasks" asp-route-id="@item.TaskId">Details</a>
-                    </td>
-                </tr>
-
-            }
-        </tbody>
-    </table>
-</div>
-<div>
-    
-    @if (Model.project.ProjectManager == User.Identity.Name)
-    {
-     <a asp-action="Edit" asp-route-id="@Model?.project.ProjectId">Edit</a>
+<style>
+    .dl-horizontal dt {
+        margin-bottom: 8px;
     }
-    <a asp-action="Index">Back to List</a>
+
+    .dl-horizontal dd {
+        margin-bottom: 16px;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <dl class="row dl-horizontal">
+                <dt class="col-sm-3">
+                    <i class="bi bi-calendar"></i>   Created At
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.project.CreatedAt)
+                </dd>
+                <dt class="col-sm-3">
+                    <i class="bi bi-calendar-event"></i>   Due Date
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.project.DueDate)
+                </dd>
+                <dt class="col-sm-3">
+                    <i class="bi bi-currency-dollar"></i>   Budget
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.project.Budget)
+                </dd>
+                <dt class="col-sm-3">
+                    <i class="bi bi-card-text"></i>   Description
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.project.Description)
+                </dd>
+                <dt class="col-sm-3">
+                    <i class="bi bi-person"></i>   Project Manager
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.project.ProjectManagerNavigation.Username)
+                </dd>
+                <dt class="col-sm-3">
+                    <i class="bi bi-info-circle"></i>   Status
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.project.StatusNavigation.StatusName)
+                </dd>
+                <dt class="col-sm-3">
+                    <i class="bi bi-people"></i>   Project Members
+                </dt>
+                <dd class="col-sm-9">
+                @foreach (UserProject member in Model.project.UserProjects)
+                {
+                        <div>@member.Username</div>
+                }
+                    </dd>
+
+            </dl>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-md-8">
+           
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
 </div>

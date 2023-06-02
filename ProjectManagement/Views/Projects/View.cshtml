@@ -2,11 +2,15 @@
 @{
     ViewData["Title"] = "View";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["ActiveTab"] = "Dashboard"; // Set the active tab based on the current page
+
 }
-<h1>@Model.project.ProjectName dashboard</h1>
+
+@Html.Partial("_projectTabs", Model.project)
+
 @if (!ViewData.ModelState.IsValid)
 {
-    <div class="alert alert-danger">
+    <div class="alert alert-danger mt-4">
         <ul>
             @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
             {
@@ -15,10 +19,11 @@
         </ul>
     </div>
 }else{
- 
+   
 
+   
 
-    <div class="text-center">
+    <div class="text-center mt-4">
 
         <div class="col-md-6">
             <div class="card text-white bg-danger mb-3" style="max-width: 10rem;">
@@ -86,6 +91,9 @@
         });
      
     </script>
+    <!-- Required JavaScript libraries -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha384-QSYPXCwokHnmJxYmHp4+JLgJ2xagQceZBoA74QG0A6S1pXo6q2kEpGCTqXJBy7JJ" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.5.0/js/bootstrap.bundle.min.js" integrity="sha512-4JfdHsAmdrU2riEkL9Ler+Hlqz1zRQc5HxW5P7UEpIStzsJNARBBle6RxreF4KBvLV0kGYBM+yH1U5rd2OsUKQ==" crossorigin="anonymous"></script>
     <script type="text/javascript" src="https://gstatic.com/charts/loader.js"></script>
     <script>
         $(document).ready(function () {

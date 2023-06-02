@@ -44,7 +44,6 @@ namespace ProjectManagement.Controllers
             if (state == EntityState.Added || state == EntityState.Modified)
             {
                 var entry = context.Entry(entity);
-
                 // Convert current values to a readable format
                 var currentValues = entry.CurrentValues.Properties
                     .ToDictionary(p => p.Name, p => entry.CurrentValues[p]?.ToString());
@@ -57,10 +56,9 @@ namespace ProjectManagement.Controllers
                 log.CurrentValue = JsonConvert.SerializeObject(currentValues);
                 log.OriginalValue = JsonConvert.SerializeObject(originalValues);
             }
-
             // Add the log to the context and save the changes
             context.Logs.Add(log);
-            context.SaveChanges();
+             context.SaveChanges();
         }
 
         // GET: Logs/Details/5
