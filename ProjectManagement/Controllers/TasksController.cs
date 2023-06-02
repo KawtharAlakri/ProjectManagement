@@ -183,6 +183,7 @@ namespace ProjectManagement.Controllers
                 LogsController.ActionLogChanges(User.Identity.Name, task, EntityState.Added, ControllerContext, _context);
 
                 TempData["SuccessMessage"] = "Task Created Successfully.";
+
                 //add notification
                 var message = "You have been assigned to a new task: " + task.TaskName;
                 var recipient = task.AssignedTo;
