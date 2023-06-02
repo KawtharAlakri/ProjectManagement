@@ -24,12 +24,12 @@
 
 <div class="row">
     @foreach (var item in Model)
-    {
+    { 
         <div class="col-md-4 mb-3">
-           <a asp-action="View" asp-route-id="@item.ProjectId">
+          
             <div class="card bg-light" style="max-width: 20rem;">
-              
-                <a asp-action="Details" asp-route-id="@item.ProjectId" class="card-link" style="text-decoration: none; color: inherit;">
+              <a asp-action="View" asp-route-id="@item.ProjectId">
+                @*<a asp-action="Details" asp-route-id="@item.ProjectId" class="card-link" style="text-decoration: none; color: inherit;">*@
                 <div class="card-body">
                       <h4 class="card-title">@item.ProjectName</h4>
                         @*<h6 class="card-subtitle mb-2 text-muted">@item.ProjectManager</h6> *@
@@ -42,10 +42,12 @@
                             <text>|</text>  <a asp-action="Delete" asp-route-id="@item.ProjectId" style="color:#3498db">Delete</a>
                     }
                 </div>
+                @*</a>*@
                 </a>
             </div>
-               </a>
+              
         </div>
+        
     }
 </div>
 @functions {
