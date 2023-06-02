@@ -1,0 +1,185 @@
+﻿@model ProjectManagement.ViewModels.ProjectUsersVM
+@{
+    ViewData["Title"] = "View";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h1>@Model.project.ProjectName dashboard</h1>
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <ul>
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+    </div>
+    <div class="alert alert-dismissible alert-warning">
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <h4 class="alert-heading">This project has no tasks</h4>
+        <p class="mb-0">Please add tasks for this project to view the dashboard</p>
+    </div>
+}else{
+ 
+
+
+    <div class="text-center">
+
+        <div class="col-md-6">
+            <div class="card text-white bg-danger mb-3" style="max-width: 10rem;">
+                <div class="card-header">Overdue tasks</div>
+                <div class="card-body">
+                    <h4 class="card-title" id="overdueTaskCount"></h4>
+                </div>
+            </div>
+            <div class="card text-white bg-warning mb-3" style="max-width: 10rem;">
+                <div class="card-header">In Progress</div>
+                <div class="card-body">
+                    <h4 class="card-title" id="inProgressTaskCount"></h4>
+                </div>
+            </div>
+            <div class="card text-white bg-success mb-3" style="max-width: 10rem;">
+                <div class="card-header">Completed</div>
+                <div class="card-body">
+                    <h4 class="card-title" id="completedCount"></h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div id="piechart_div" style="border: 1px solid #ccc"></div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div id="barchart_div" style="border: 1px solid #ccc"></div>
+            </div>
+        </div>
+
+
+
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        //on document ready return the number of each task status
+        $(document).ready(function () {
+
+            var projectId = '@Model.project.ProjectId';
+            console.log(projectId);
+            $.ajax({
+                type: 'GET',
+                dataType: 'json',
+                contentType: 'application/json',
+                url: '/Projects/pendingTask?projectId=' + projectId,
+                success: function (data) {
+                    console.log(data);
+                    var overdueTaskCount = data.overdue || 0;
+                    var inProgressTaskCount = data["in progress"] || 0;
+                    var completedTaskCount = data.completed || 0;
+                    $('#overdueTaskCount').text(overdueTaskCount);
+                    $('#inProgressTaskCount').text(inProgressTaskCount);
+                    $('#completedCount').text(completedTaskCount);
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+        });
+     
+    </script>
+    <script type="text/javascript" src="https://gstatic.com/charts/loader.js"></script>
+    <script>
+        $(document).ready(function () {
+            var projectId = '@Model.project.ProjectId';
+            $.ajax({
+                type: 'GET',
+                dataType: 'json',
+                contentType: 'application/json',
+                url: '/Projects/pendingTask?projectId=' + projectId,
+                success: function (data) {
+                    google.charts.load('current', { 'packages': ['corechart'] });
+                    google.charts.setOnLoadCallback(function () {
+                        drawChart(data);
+                    });
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+        });
+
+        function drawChart(data) {
+            var chartData = [];
+            chartData.push(['Task Status', 'Count']);
+
+            var inProgressCount = 0;
+            if (data.hasOwnProperty('in progress')) {
+                inProgressCount = data['in progress'];
+                chartData.push(['in progress', inProgressCount]);
+            }
+
+            var completedCount = 0;
+            if (data.hasOwnProperty('completed')) {
+                completedCount = data['completed'];
+                chartData.push(['completed', completedCount]);
+            }
+
+            var chartOptions = {
+                title: 'Number of In progress VS Completed tasks',
+                pieHole: 0.4,
+                width: 500,
+                height: 300
+            };
+
+            var chart = new google.visualization.PieChart(document.getElementById('piechart_div'));
+            chart.draw(google.visualization.arrayToDataTable(chartData), chartOptions);
+        }
+    </script>
+
+    <script>
+
+        $(document).ready(function () {
+            var projectId = '@Model.project.ProjectId';
+            $.ajax({
+                type: 'GET',
+                dataType: 'json',
+                contentType: 'application/json',
+                url: '/Projects/GetTaskCountsByMember?projectId=' + projectId,
+                success: function (data) {
+                    google.charts.load('current', { 'packages': ['corechart'] });
+                    google.charts.setOnLoadCallback(function () {
+                        drawBarChart(data);
+                    });
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+        });
+
+
+        function drawBarChart(data) {
+            var chartData = [];
+            chartData.push(['Member', 'Task Count']);
+
+            for (var member in data) {
+                chartData.push([member, data[member]]);
+            }
+
+            var chartOptions = {
+                title: 'Number of Tasks by Member',
+                legend: { position: 'none' },
+                width: 500,
+                height: 300
+            };
+
+            var chart = new google.visualization.BarChart(document.getElementById('barchart_div'));
+            chart.draw(google.visualization.arrayToDataTable(chartData), chartOptions);
+        }
+    </script>
+}
+

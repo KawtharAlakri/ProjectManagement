@@ -169,23 +169,8 @@ namespace ProjectManagement.Controllers
         {
             return (_context.Projects?.Any(e => e.ProjectId == id)).GetValueOrDefault();
         }
-        public IActionResult getAllProjects()
-        {
-            try
-            {
-                var projectsAndTasks = _context.Projects.Select(
-                    x => new
-                    {
-                        name = x.ProjectName,
-                        budget = x.Budget
-                    }
-                    );
-                return Json(projectsAndTasks);
-            }
-            catch
-            {
-                return BadRequest();
-            }
-        }
+       
+
+       
     }
 }

@@ -36,7 +36,9 @@
     <a asp-action="Index" asp-controller="Projects">Clear</a>
 </form>
 @foreach (var item in Model){
+    
     <div class="card" style="max-width: 20rem;">
+        <a asp-action="View" asp-route-id="@item.ProjectId">
     <div class="card-body">
         <h4 class="card-title">@item.ProjectName</h4>
         <h6 class="card-subtitle mb-2 text-muted">@item.ProjectManager</h6> <span class="badge rounded-pill bg-secondary">@item.Status</span>
@@ -45,9 +47,12 @@
             {
                 <a asp-action="Edit" asp-route-id="@item.ProjectId" class="card-link">Edit</a> 
                 <a asp-action="Delete" asp-route-id="@item.ProjectId" class="card-link"> Delete </a>
+                <a asp-controller="Tasks" asp-action="Index" asp-route-id="@item.ProjectId">Tasks</a>
             }
     </div>
+        </a>
 </div>
+   
 }
 @*
 <table class="table">

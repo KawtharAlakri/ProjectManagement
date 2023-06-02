@@ -20,7 +20,7 @@ namespace ProjectManagement.Controllers
         public ProjectsController(ProjectManagementContext context)
         {
             _context = context;
-           ;
+            ;
         }
 
         // GET: Projects
@@ -32,10 +32,10 @@ namespace ProjectManagement.Controllers
                                    .Include(p => p.StatusNavigation)
                                    .Include(p => p.UserProjects)
                                    .Where(p => p.UserProjects.Any(up => up.Username == User.Identity.Name) || p.ProjectManager == User.Identity.Name);
-            
+
             //aplly any search or filter 
             if (!String.IsNullOrEmpty(searchString))
-            { 
+            {
                 fullProjectsContext = fullProjectsContext.Where(p => p.ProjectName.Contains(searchString));
             }
             if (filterBy == "member")
@@ -44,7 +44,7 @@ namespace ProjectManagement.Controllers
             }
             else if (filterBy == "manager")
             {
-                fullProjectsContext = fullProjectsContext.Where(p=>p.ProjectManager == User.Identity.Name);
+                fullProjectsContext = fullProjectsContext.Where(p => p.ProjectManager == User.Identity.Name);
 
             }
             else if (!String.IsNullOrEmpty(statusFilter))
@@ -64,7 +64,7 @@ namespace ProjectManagement.Controllers
         // GET: Projects/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            
+
             if (id == null || _context.Projects == null)
             {
                 return NotFound();
@@ -72,7 +72,7 @@ namespace ProjectManagement.Controllers
 
             var project = await _context.Projects
                 .Include(p => p.ProjectManagerNavigation)
-                .Include(p => p.StatusNavigation).Include(p=>p.Tasks).Include(p=>p.UserProjects)
+                .Include(p => p.StatusNavigation).Include(p => p.Tasks).Include(p => p.UserProjects)
                 .FirstOrDefaultAsync(m => m.ProjectId == id);
             if (project == null)
             {
@@ -80,7 +80,7 @@ namespace ProjectManagement.Controllers
             }
 
             var isMember = _context.UserProjects.Any(p => p.Project == project && p.Username == User.Identity.Name);
-             if (project.ProjectManager != User.Identity.Name && !isMember)
+            if (project.ProjectManager != User.Identity.Name && !isMember)
             {
                 TempData["ErrorMessage"] = "You do not have permission to view this project.";
                 return RedirectToAction(nameof(Index));
@@ -91,7 +91,7 @@ namespace ProjectManagement.Controllers
             {
                 selectedUsers.Add(userProject.Username);
             }
-            ProjectUsersVM vm = new ProjectUsersVM { project = project, selectedUsers = selectedUsers};
+            ProjectUsersVM vm = new ProjectUsersVM { project = project, selectedUsers = selectedUsers };
 
             return View(vm);
         }
@@ -176,7 +176,7 @@ namespace ProjectManagement.Controllers
             {
                 selectedUsers.Add(userProject.Username);
             }
-            ProjectUsersVM vm = new ProjectUsersVM { project = project,selectedUsers = selectedUsers, allUsers = _context.Users };
+            ProjectUsersVM vm = new ProjectUsersVM { project = project, selectedUsers = selectedUsers, allUsers = _context.Users };
             ViewData["Status"] = new SelectList(_context.Statuses, "StatusName", "StatusName", project.Status);
 
             return View(vm);
@@ -217,8 +217,8 @@ namespace ProjectManagement.Controllers
                     {
                         var message = $"The status of project {viewModel.project.ProjectName} has changed to {currentStatus}";
                         var recipient = viewModel.project.ProjectManager.ToString();
-                       await NotificationsController.PushNotification(recipient, message,_context);
-               
+                        await NotificationsController.PushNotification(recipient, message, _context);
+
                     }
 
                     //update project members (remove all and insert again) ? 
@@ -240,7 +240,7 @@ namespace ProjectManagement.Controllers
                                 _context.UserProjects.Add(userProject);
                             }
                         }
-                        
+
 
                         await _context.SaveChangesAsync();
                     }
@@ -272,7 +272,7 @@ namespace ProjectManagement.Controllers
             {
                 return NotFound();
             }
-            
+
 
             var project = await _context.Projects
                 .Include(p => p.ProjectManagerNavigation)
@@ -301,7 +301,7 @@ namespace ProjectManagement.Controllers
                 return Problem("Entity set 'ProjectManagementContext.Projects'  is null.");
             }
             var project = await _context.Projects
-            .Include(p => p.Tasks).Include(p=>p.UserProjects)  
+            .Include(p => p.Tasks).Include(p => p.UserProjects)
             .SingleOrDefaultAsync(p => p.ProjectId == id);
             if (project != null)
             {
@@ -323,7 +323,136 @@ namespace ProjectManagement.Controllers
 
         private bool ProjectExists(int id)
         {
-          return (_context.Projects?.Any(e => e.ProjectId == id)).GetValueOrDefault();
+            return (_context.Projects?.Any(e => e.ProjectId == id)).GetValueOrDefault();
         }
+        // get the dashboard view
+        //public async Task<IActionResult> View(int id)
+        //{
+        //    var project = await _context.Projects
+        //        .Include(p => p.Tasks)
+        //        .FirstOrDefaultAsync(p => p.ProjectId == id);
+
+        //    if (project == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    var allUsers = await _context.Users.ToListAsync();
+
+        //    var selectedUsers = await _context.UserProjects
+        //        .Where(up => up.ProjectId == id)
+        //        .Select(up => up.Username)
+        //        .ToListAsync();
+
+        //    var model = new ProjectUsersVM
+        //    {
+        //        project = project,
+        //        allUsers = allUsers,
+        //        selectedUsers = selectedUsers
+        //    };
+
+        //    return View(model);
+        //}
+
+        //tester
+        public async Task<IActionResult> View(int id)
+        {
+            var project = await _context.Projects
+                .Include(p => p.Tasks)
+                .FirstOrDefaultAsync(p => p.ProjectId == id);
+
+            if (project == null)
+            {
+                return NotFound();
+            }
+
+            if (project.Tasks == null || project.Tasks.Count == 0)
+            {
+                ModelState.AddModelError(string.Empty, "This project has no tasks.");
+            }
+
+            var allUsers = await _context.Users.ToListAsync();
+
+            var selectedUsers = await _context.UserProjects
+                .Where(up => up.ProjectId == id)
+                .Select(up => up.Username)
+                .ToListAsync();
+
+            var model = new ProjectUsersVM
+            {
+                project = project,
+                allUsers = allUsers,
+                selectedUsers = selectedUsers
+            };
+
+            return View(model);
+        }
+
+
+        //public IActionResult pendingTask()
+        //{
+        //    try
+        //    {
+        //        var overdueTaskCount = _context.Projects
+        //            .SelectMany(p => p.Tasks)
+        //            .Count(t => t.Status == "overdue");
+        //        return Json(overdueTaskCount);
+        //    }
+        //    catch
+        //    {
+        //        return BadRequest();
+        //    }
+        //}
+
+        public IActionResult pendingTask(int projectId)
+        {
+            try
+            {
+                var taskCounts = _context.Projects
+                    .Where(p => p.ProjectId == projectId)
+                    .SelectMany(p => p.Tasks)
+                    .GroupBy(t => t.Status)
+                    .Select(g => new
+                    {
+                        Status = g.Key,
+                        Count = g.Count()
+                    })
+                    .ToDictionary(x => x.Status, x => x.Count);
+                return Json(taskCounts);
+            }
+            catch
+            {
+                return BadRequest();
+            }
+        }
+
+        public IActionResult GetTaskCountsByMember(int projectId)
+        {
+            try
+            {
+                var taskCounts = _context.Projects
+                    .Where(p => p.ProjectId == projectId)
+                    .SelectMany(p => p.Tasks)
+                    .GroupBy(t => t.AssignedTo)
+                    .Select(g => new
+                    {
+                        AssignedTo = g.Key,
+                        Count = g.Count()
+                    })
+                    .ToDictionary(x => x.AssignedTo, x => x.Count);
+
+                return Json(taskCounts);
+            }
+            catch
+            {
+                return BadRequest();
+            }
+        }
+        //public IActionResult getProjectTasksStats(int projectId)
+        //{
+        //    var _project = _context.Projects.FirstOrDefault(p=>p.ProjectId == projectId);
+
+        //}
+
     }
 }
