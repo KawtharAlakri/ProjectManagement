@@ -272,9 +272,8 @@
                 url: `/Notifications/Delete/${id}`,
                 type: 'DELETE',
                 data: { id: id },
-                beforeSend: function (xhr) {
-                    xhr.setRequestHeader("X-CSRF-TOKEN",
-                        $('input:hidden[name="__RequestVerificationToken"]').val()); // Include the AntiForgeryToken value in the headers
+                headers: {
+                    "RequestVerificationToken": $('input:hidden[name="__RequestVerificationToken"]').val()
                 },
                 success: function (result) {
 
