@@ -20,8 +20,6 @@ namespace ProjectManagement.Middleware
             }
             catch (Exception ex)
             {
-                // Exception handling logic
-                // Log the exception, return an error response, or perform other necessary actions
 
                 // Get the current logged-in user's username
                 string username = context.User.Identity.Name;
@@ -41,9 +39,9 @@ namespace ProjectManagement.Middleware
                 _context.Logs.Add(log);
                 await _context.SaveChangesAsync();
 
-                // Return an error response
-                context.Response.StatusCode = 500;
-                await context.Response.WriteAsync("An error occurred:" + ex.Message);
+                var errorMessage = "An error occurred: " + ex.Message;
+                var errorUrl = "/Home/Error?errorMessage=" + Uri.EscapeDataString(errorMessage);
+                context.Response.Redirect(errorUrl);
             }
         }
     }

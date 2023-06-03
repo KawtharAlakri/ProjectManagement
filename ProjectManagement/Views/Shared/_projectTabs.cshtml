@@ -4,8 +4,13 @@
     string activeTab = ViewData["ActiveTab"]?.ToString();
 }
 
+<div class="mt-2">
+    <a asp-action="Index" asp-controller="Projects" style="text-decoration: none;">
+        <i class="bi bi-chevron-left"></i> Back to List
+    </a>
+</div>
 <div class="d-flex justify-content-between align-items-center">
-    <h1 class="mt-4">@Model.ProjectName</h1>
+    <h1 class="mt-2">@Model.ProjectName</h1>
     @if (Model.ProjectManager == User.Identity.Name)
     {
         <div>

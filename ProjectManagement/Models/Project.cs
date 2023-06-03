@@ -22,7 +22,7 @@ namespace ProjectManagement.Models
         [StringLength(255, ErrorMessage = "The Project Name field must be a maximum of 255 characters.")]
         [Unicode(false)]
         [Display (Name = "Project Name")]
-        [Required]
+        [Required (ErrorMessage = "The Project Name field must be filled.")]
         public string ProjectName { get; set; } = null!;
         [Column("created_at", TypeName = "date")]
         [Display(Name = "Created At")]
