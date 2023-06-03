@@ -253,7 +253,7 @@ namespace ProjectManagement.Controllers
                 //}
                 if (previousStatus != currentStatus)
                 {
-                        var message = $"The status of project {viewModel.project.ProjectName} has changed to {currentStatus}";
+                        var message = $"The status of project' {viewModel.project.ProjectName}' has changed to '{currentStatus}'";
                         var recipient = viewModel.project.ProjectManager.ToString();
                         await NotificationsController.PushNotification2(recipient, message, _context);
                         var notifications2 = new List<Notification>
