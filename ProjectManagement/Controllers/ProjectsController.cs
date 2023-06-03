@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using NuGet.Packaging.Signing;
+using ProjectManagement.Hubs;
 using ProjectManagement.Models;
 using ProjectManagement.ViewModels;
 
@@ -18,11 +21,11 @@ namespace ProjectManagement.Controllers
     public class ProjectsController : Controller
     {
         private readonly ProjectManagementContext _context;
-
-        public ProjectsController(ProjectManagementContext context)
+        private readonly IHubContext<NotificationsHub> _hubContext;
+        public ProjectsController(ProjectManagementContext context, IHubContext<NotificationsHub> hubContext)
         {
             _context = context;
-            ;
+            _hubContext = hubContext;
         }
 
         // GET: Projects
@@ -221,17 +224,45 @@ namespace ProjectManagement.Controllers
 
                     // Check if the project status has changed
                     var currentStatus = viewModel.project.Status;
+                   // if (previousStatus != currentStatus)
+                   // {
+                   //     var message = $"The status of project {viewModel.project.ProjectName} has changed to {currentStatus}";
 
-                    if (previousStatus != currentStatus)
-                    {
+                   //     // Get the ApplicationUser object for the project manager
+                   //     var recipient = viewModel.project.ProjectManager.ToString();
+
+                   //     // Save the notification to the database and broadcast to all clients
+                   //     await NotificationsController.PushNotification(recipient, message, _context, _hubContext);
+                   // }
+                   //// Broadcast the notification to all clients using SignalR
+                   //                    var notifications = new List<Notification>
+                   //{
+                   //     new Notification { NotificationText = $"The status of project '{viewModel.project.ProjectName}' has changed to '{currentStatus}'" }
+                   //};
+                   // await _hubContext.Clients.All.SendAsync("getUpdatedNotifications", notifications);
+
+               // }//this used to work
+
+                //    if (previousStatus != currentStatus)
+                //{
+                //    var message = $"The status of project {viewModel.project.ProjectName} has changed to {currentStatus}";
+                //    var recipient = viewModel.project.ProjectManager.ToString();
+                //    await NotificationsController.PushNotification2(recipient, message, _context);
+
+                //}
+                if (previousStatus != currentStatus)
+                {
                         var message = $"The status of project {viewModel.project.ProjectName} has changed to {currentStatus}";
                         var recipient = viewModel.project.ProjectManager.ToString();
-                        await NotificationsController.PushNotification(recipient, message, _context);
-
-                    }
-
-                    //update project members (remove all and insert again) 
-                    var records = _context.UserProjects.Where(p => p.ProjectId == viewModel.project.ProjectId);
+                        await NotificationsController.PushNotification2(recipient, message, _context);
+                        var notifications2 = new List<Notification>
+                {
+                    new Notification { NotificationText = message }
+                };
+                    await _hubContext.Clients.All.SendAsync("getUpdatedNotifications", notifications2);
+                }
+                //update project members (remove all and insert again) 
+                var records = _context.UserProjects.Where(p => p.ProjectId == viewModel.project.ProjectId);
                     _context.UserProjects.RemoveRange(records);
                     //insert 
                     if (viewModel.selectedUsers != null && viewModel.selectedUsers.Count() > 0)

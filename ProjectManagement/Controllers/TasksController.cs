@@ -5,9 +5,11 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using ProjectManagement.Hubs;
 using ProjectManagement.Models;
 using ProjectManagement.ViewModels;
 
@@ -17,10 +19,11 @@ namespace ProjectManagement.Controllers
     public class TasksController : Controller
     {
         private readonly ProjectManagementContext _context;
-
-        public TasksController(ProjectManagementContext context)
+        private readonly IHubContext<NotificationsHub> _hubContext;
+        public TasksController(ProjectManagementContext context, IHubContext<NotificationsHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         // GET: Tasks
@@ -184,11 +187,17 @@ namespace ProjectManagement.Controllers
 
                 TempData["SuccessMessage"] = "Task Created Successfully.";
 
-                //add notification
-                var message = "You have been assigned to a new task: " + task.TaskName;
+                // add notification
+                var message = "You have been assigned to a new task: '" + task.TaskName + "'";
                 var recipient = task.AssignedTo;
 
-               await NotificationsController.PushNotification(recipient, message,_context);
+                await NotificationsController.PushNotification2(recipient, message, _context);
+                var notifications2 = new List<Notification>
+                {
+                    new Notification { NotificationText = message }
+                };
+                await _hubContext.Clients.All.SendAsync("getUpdatedNotifications", notifications2);
+
 
                 return RedirectToAction(nameof(Index), new {id = vm.project.ProjectId});
             }
