@@ -168,7 +168,7 @@ namespace ProjectManagement.Controllers
 
         // POST: Notifications/Delete/5
         [HttpPost, ActionName("Delete")]
-        //[ValidateAntiForgeryToken]
+        [ValidateAntiForgeryToken]
         [HttpDelete]
         [Route("Notifications/Delete/{id}")]
         public async Task<IActionResult> DeleteConfirmed(int id)

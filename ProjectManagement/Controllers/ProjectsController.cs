@@ -491,6 +491,37 @@ namespace ProjectManagement.Controllers
                 return BadRequest();
             }
         }
+        public IActionResult DaysLeft(int projectId)
+        {
+            try
+            {
+                var project = _context.Projects
+                    .SingleOrDefault(p => p.ProjectId == projectId);
+
+                if (project == null)
+                {
+                    return NotFound();
+                }
+
+                if (project.Status == "completed")
+                {
+                    return Json(new { DaysLeft = "Completed project" });
+                }
+
+                int? daysLeft = null;
+
+                if (project.DueDate.HasValue)
+                {
+                    daysLeft = (project.DueDate.Value - DateTime.Today).Days;
+                }
+
+                return Json(new { DaysLeft = daysLeft });
+            }
+            catch
+            {
+                return BadRequest();
+            }
+        }
         //public IActionResult getProjectTasksStats(int projectId)
         //{
         //    var _project = _context.Projects.FirstOrDefault(p=>p.ProjectId == projectId);
