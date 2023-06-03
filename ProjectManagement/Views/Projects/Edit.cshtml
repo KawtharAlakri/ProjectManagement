@@ -1,7 +1,7 @@
 ﻿@model ProjectManagement.ViewModels.ProjectUsersVM
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit Project";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -9,6 +9,17 @@
 
 <h4>Project</h4>
 <hr />
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger mt-4">
+        <ul>
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+    </div>
+}
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Edit">

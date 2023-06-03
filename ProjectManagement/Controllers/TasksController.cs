@@ -98,6 +98,48 @@ namespace ProjectManagement.Controllers
             return View(await tasksContext.ToListAsync());
         }
 
+
+        public async Task<IActionResult> Dashboard()
+        {
+            //get all user's tasks
+            IQueryable<Models.Task> taskContext = _context.Tasks.Include(t => t.AssignedToNavigation)
+                .Include(t => t.Project)
+                .Include(t => t.StatusNavigation)
+                .Where(t => t.AssignedTo == User.Identity.Name);
+
+            //calculate tasks insights
+            ViewBag.completed = taskContext.Count(x => x.Status == "completed");
+            ViewBag.inProgress = taskContext.Count(x => x.Status == "in progress");
+            ViewBag.overdue = taskContext.Count(x => x.Status == "overdue");
+
+            // Get the current date
+            DateTime currentDate = DateTime.Today;
+
+            // Get nearest tasks due dates 
+            var upcomingTasks = taskContext
+                .Where(t => t.DueDate > currentDate)
+                .Where(t => t.StatusNavigation.StatusName != "completed")
+                .OrderBy(t => t.DueDate)
+                .Take(4);
+
+            //get nearest projects due date 
+            //get the full project context with projects that user is manager of or a member in 
+            
+            var upcomingProjects = _context.Projects
+                .Include(p => p.ProjectManagerNavigation)
+                .Include(p => p.StatusNavigation)
+                .Include(p => p.UserProjects)
+                .Where(p => p.UserProjects.Any(up => up.Username == User.Identity.Name) || p.ProjectManager == User.Identity.Name)
+                .Where(p => p.DueDate.HasValue && p.DueDate > DateTime.Today)
+                .Where(p => p.StatusNavigation.StatusName != "completed")
+                .OrderBy(p => p.DueDate)
+                .Take(4);
+            DahsboardVM vm = new DahsboardVM { projects = upcomingProjects, Tasks = upcomingTasks };
+            return View(vm);
+        }
+
+
+
         // GET: Tasks/Details/5
         public async Task<IActionResult> Details(int? id)
         {
