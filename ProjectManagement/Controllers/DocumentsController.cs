@@ -238,15 +238,23 @@ namespace ProjectManagement.Controllers
             var document = await _context.Documents.FindAsync(id);
             if (document != null)
             {
+                //remove and log user action
                 _context.Documents.Remove(document);
-            }
-            
-            await _context.SaveChangesAsync();
+                LogsController.ActionLogChanges(User.Identity.Name, document, EntityState.Deleted, ControllerContext, _context);
+                await _context.SaveChangesAsync();
 
-            //log user action
-            LogsController.ActionLogChanges(User.Identity.Name, document, EntityState.Deleted, ControllerContext, _context);
+                // Get the file path of the document
+                var filePath = Path.Combine("wwwroot", document.FilePath);
 
-            TempData["SuccessMessage"] = "Document Deleted Successfully.";
+                // Check if the file exists and delete it from filesystem 
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+
+
+                TempData["SuccessMessage"] = "Document Deleted Successfully.";
+            }            
             return RedirectToAction(nameof(Index), new { id = document.TaskId });
         }
 

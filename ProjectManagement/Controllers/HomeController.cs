@@ -26,6 +26,7 @@ namespace ProjectManagement.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error(string errorMessage)
         {
+            //pass any error message from exception handler to the error view
             TempData["ErrorMessage"] = errorMessage;
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }

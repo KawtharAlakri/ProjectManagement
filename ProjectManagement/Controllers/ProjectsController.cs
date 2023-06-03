@@ -39,7 +39,7 @@ namespace ProjectManagement.Controllers
                                    .Include(p => p.UserProjects)
                                    .Where(p => p.UserProjects.Any(up => up.Username == User.Identity.Name) || p.ProjectManager == User.Identity.Name);
 
-            //aplly any search or filter 
+            //apply any search or filter 
             if (!String.IsNullOrEmpty(searchString))
             {
                 fullProjectsContext = fullProjectsContext.Where(p => p.ProjectName.Contains(searchString));
@@ -129,6 +129,8 @@ namespace ProjectManagement.Controllers
             if (ModelState.IsValid)
             {
                 _context.Projects.Add(project);
+                //log user action
+                LogsController.ActionLogChanges(User.Identity.Name, project, EntityState.Added, ControllerContext, _context);
                 await _context.SaveChangesAsync();
                 // Add users to the UserProject table
                 if (viewModel.selectedUsers != null && viewModel.selectedUsers.Count() > 0)
@@ -148,9 +150,6 @@ namespace ProjectManagement.Controllers
                     }
                     await _context.SaveChangesAsync();
                 }
-
-                //log user action
-                LogsController.ActionLogChanges(User.Identity.Name, project, EntityState.Added, ControllerContext, _context);
 
                 TempData["SuccessMessage"] = "Project Created Successfully.";
                 return RedirectToAction(nameof(Index));
@@ -217,10 +216,12 @@ namespace ProjectManagement.Controllers
 
                     /// update the project
                     _context.Update(viewModel.project);
-                    await _context.SaveChangesAsync();
 
                     //log user action
                     LogsController.ActionLogChanges(User.Identity.Name, viewModel.project, EntityState.Modified, ControllerContext, _context);
+
+                    await _context.SaveChangesAsync();
+
 
                     // Check if the project status has changed
                     var currentStatus = viewModel.project.Status;
@@ -355,10 +356,13 @@ namespace ProjectManagement.Controllers
 
                 //delete the project itself 
                 _context.Projects.Remove(project);
-                await _context.SaveChangesAsync();
-
+                
                 //log user action
                 LogsController.ActionLogChanges(User.Identity.Name, project, EntityState.Deleted, ControllerContext, _context);
+                
+                await _context.SaveChangesAsync();
+
+                
             }
             TempData["SuccessMessage"] = "Project Deleted Successfully.";
             return RedirectToAction(nameof(Index));

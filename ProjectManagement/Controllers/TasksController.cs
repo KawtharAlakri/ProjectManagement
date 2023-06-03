@@ -118,16 +118,14 @@ namespace ProjectManagement.Controllers
             // Get the current date
             DateTime currentDate = DateTime.Today;
 
-            // Get nearest tasks due dates 
+            // Get nearest tasks due dates (from tasks assigned to user)
             var upcomingTasks = taskContext
                 .Where(t => t.DueDate > currentDate)
                 .Where(t => t.StatusNavigation.StatusName != "completed")
                 .OrderBy(t => t.DueDate)
                 .Take(4);
 
-            //get nearest projects due date 
-            //get the full project context with projects that user is manager of or a member in 
-            
+            //get nearest projects due date (from projects that user is member or manager)
             var upcomingProjects = _context.Projects
                 .Include(p => p.ProjectManagerNavigation)
                 .Include(p => p.StatusNavigation)
@@ -198,8 +196,6 @@ namespace ProjectManagement.Controllers
         }
 
         // POST: Tasks/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(TaskDetailsVM vm)
@@ -220,13 +216,10 @@ namespace ProjectManagement.Controllers
 
             if (ModelState.IsValid)
             {
-                //add task
+                //add task and log user action
                 _context.Add(task);
-                // log user action
                 LogsController.ActionLogChanges(User.Identity.Name, task, EntityState.Added, ControllerContext, _context);
                 await _context.SaveChangesAsync();
-
-                
 
                 TempData["SuccessMessage"] = "Task Created Successfully.";
 
@@ -292,8 +285,6 @@ namespace ProjectManagement.Controllers
         }
 
         // POST: Tasks/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(TaskDetailsVM vm)
@@ -316,12 +307,10 @@ namespace ProjectManagement.Controllers
             {
                 try
                 {
+                    //update task and log user action
                     _context.Update(task);
-                    //log user action
                     LogsController.ActionLogChanges(User.Identity.Name, task, EntityState.Modified, ControllerContext, _context);
                     await _context.SaveChangesAsync();
-
-                    
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -390,9 +379,8 @@ namespace ProjectManagement.Controllers
                  _context.RemoveRange(task.Comments);
                 await _context.SaveChangesAsync();
 
-                //remove task
+                //remove task and log user action
                 _context.Tasks.Remove(task);
-                //log user action
                 LogsController.ActionLogChanges(User.Identity.Name, task, EntityState.Deleted, ControllerContext, _context);
             }
             await _context.SaveChangesAsync();
