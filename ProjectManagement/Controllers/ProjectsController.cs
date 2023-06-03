@@ -224,42 +224,45 @@ namespace ProjectManagement.Controllers
 
                     // Check if the project status has changed
                     var currentStatus = viewModel.project.Status;
-                    if (previousStatus != currentStatus)
-                    {
-                        var message = $"The status of project {viewModel.project.ProjectName} has changed to {currentStatus}";
+                   // if (previousStatus != currentStatus)
+                   // {
+                   //     var message = $"The status of project {viewModel.project.ProjectName} has changed to {currentStatus}";
 
-                        // Get the ApplicationUser object for the project manager
-                        var recipient = viewModel.project.ProjectManager.ToString();
+                   //     // Get the ApplicationUser object for the project manager
+                   //     var recipient = viewModel.project.ProjectManager.ToString();
 
-                        // Save the notification to the database and broadcast to all clients
-                        await NotificationsController.PushNotification(recipient, message, _context, _hubContext);
-                    }
-                    // Broadcast the notification to all clients using SignalR
-                    //                    var notifications = new List<Notification>
-                    //{
-                    //    new Notification { NotificationText = $"The status of project '{viewModel.project.ProjectName}' has changed to '{currentStatus}'" }
-                    //};
-                    //                    await _hubContext.Clients.All.SendAsync("getUpdatedNotifications", notifications);
-                    //
-                    //  }//this used to work
-
-                    //////if (previousStatus != currentStatus)
-                    //////{
-                    //////    var message = $"The status of project {viewModel.project.ProjectName} has changed to {currentStatus}";
-                    //////    var recipient = viewModel.project.ProjectManager.ToString();
-                    //////    await NotificationsController.PushNotification(recipient, message, _context);
-
-                    //////}
-                    //////if (previousStatus != currentStatus)
-                    //////{
-                    //////    var notifications = new List<Notification>
-                    //////{
-                    //////    new Notification { NotificationText = $"The status of project '{viewModel.project.ProjectName}' has changed to '{currentStatus}'" }
-                    //////};
-                    //////    await _hubContext.Clients.All.SendAsync("getUpdatedNotifications", notifications);
+                   //     // Save the notification to the database and broadcast to all clients
+                   //     await NotificationsController.PushNotification(recipient, message, _context, _hubContext);
                    // }
-                    //update project members (remove all and insert again) 
-                    var records = _context.UserProjects.Where(p => p.ProjectId == viewModel.project.ProjectId);
+                   //// Broadcast the notification to all clients using SignalR
+                   //                    var notifications = new List<Notification>
+                   //{
+                   //     new Notification { NotificationText = $"The status of project '{viewModel.project.ProjectName}' has changed to '{currentStatus}'" }
+                   //};
+                   // await _hubContext.Clients.All.SendAsync("getUpdatedNotifications", notifications);
+
+               // }//this used to work
+
+                //    if (previousStatus != currentStatus)
+                //{
+                //    var message = $"The status of project {viewModel.project.ProjectName} has changed to {currentStatus}";
+                //    var recipient = viewModel.project.ProjectManager.ToString();
+                //    await NotificationsController.PushNotification2(recipient, message, _context);
+
+                //}
+                if (previousStatus != currentStatus)
+                {
+                        var message = $"The status of project {viewModel.project.ProjectName} has changed to {currentStatus}";
+                        var recipient = viewModel.project.ProjectManager.ToString();
+                        await NotificationsController.PushNotification2(recipient, message, _context);
+                        var notifications2 = new List<Notification>
+                {
+                    new Notification { NotificationText = message }
+                };
+                    await _hubContext.Clients.All.SendAsync("getUpdatedNotifications", notifications2);
+                }
+                //update project members (remove all and insert again) 
+                var records = _context.UserProjects.Where(p => p.ProjectId == viewModel.project.ProjectId);
                     _context.UserProjects.RemoveRange(records);
                     //insert 
                     if (viewModel.selectedUsers != null && viewModel.selectedUsers.Count() > 0)

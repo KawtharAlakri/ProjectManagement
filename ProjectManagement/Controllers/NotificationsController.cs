@@ -14,7 +14,7 @@ using ProjectManagement.ViewModels;
 
 namespace ProjectManagement.Controllers
 {
-
+    [Authorize]
     public class NotificationsController : Controller
     {
         private readonly ProjectManagementContext _context;
@@ -245,21 +245,21 @@ namespace ProjectManagement.Controllers
         {
             await _hubcontext.NotificationsHubBroadcast(_context.Notifications.ToList());
         }
-        //public static async System.Threading.Tasks.Task PushNotification(String recipient, String message, ProjectManagementContext context)
-        //{
-        //    // create notification obj
-        //    var notification = new Notification
-        //    {
-        //        GeneratedAt = DateTime.Now,
-        //        IsRead = false,
-        //        Recipient = recipient,
-        //        NotificationText = message,
+        public static async System.Threading.Tasks.Task PushNotification2(String recipient, String message, ProjectManagementContext context)
+        {
+            // create notification obj
+            var notification = new Notification
+            {
+                GeneratedAt = DateTime.Now,
+                IsRead = false,
+                Recipient = recipient,
+                NotificationText = message,
 
-        //    };
-        //    context.Notifications.Add(notification);
-        //    await context.SaveChangesAsync();
+            };
+            context.Notifications.Add(notification);
+            await context.SaveChangesAsync();
 
-        //}
+        }
 
         public static async System.Threading.Tasks.Task<List<Notification>> PushNotification(string recipient, string message, ProjectManagementContext context, IHubContext<NotificationsHub> hubContext)
         {

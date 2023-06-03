@@ -191,7 +191,12 @@ namespace ProjectManagement.Controllers
                 var message = "You have been assigned to a new task: '" + task.TaskName + "'";
                 var recipient = task.AssignedTo;
 
-                await NotificationsController.PushNotification(recipient, message, _context, _hubContext);
+                await NotificationsController.PushNotification2(recipient, message, _context);
+                var notifications2 = new List<Notification>
+                {
+                    new Notification { NotificationText = message }
+                };
+                await _hubContext.Clients.All.SendAsync("getUpdatedNotifications", notifications2);
 
 
                 return RedirectToAction(nameof(Index), new {id = vm.project.ProjectId});
