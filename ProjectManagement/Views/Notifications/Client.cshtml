@@ -5,42 +5,20 @@
 
 <h1>Notification Center</h1>
 
-<div>
-    <div class="row">
-        <div class="col-md-8">
-            <div class="x_panel">
-                <div class="x_title">
-                    <h4>Notifications</h4>
-                    <div class="clearfix"></div>
-                </div>
-                <div class="x_content">
-                    <table class="table table-hover" id="tblNotifications">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Notification</th>
-                                <th>Date / Time</th>
-                                <th>Read</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
+    <div class="card-body">
+    @Html.AntiForgeryToken()
+        <div id="notificationList">
+            <!-- The notification list will be added here by JavaScript -->
         </div>
-
-
     </div>
 
-
-</div>
 
 @section Scripts {
 
     <script src="~/js/signalr/dist/browser/signalr.js"></script>
     <script src="~/js/signalr/dist/browser/signalr.min.js"></script>
 
-    <script>
+    @*<script>
 
         "use strict";
         var username = '@User.Identity.Name';
@@ -56,15 +34,7 @@
                 return console.error(err.toString());
             });
         });
-        //initially, we need to show the list of all notifications
-        //So we will use our action method that returns Json
-        //function InvokeNotifications() {
-        //    var url = "../Notifications/GetAll";
-        //    $.get(url, function (nData) {
-        //        BindNotificationsToGrid(nData);
-        //    }
-        //    );
-        //};
+   
 
         function InvokeNotifications(username) {         
             var url = "../Notifications/GetForUser?username=" + username;
@@ -101,7 +71,9 @@
                     text: 'Delete',
                     class: 'btn btn-danger',
                     click: function () {
-                        DeleteNotification(notification.notificationId);
+                        if (confirm('Are you sure you want to delete this notification?')) {
+                            DeleteNotification(notification.notificationId);
+                        }
                     }
                 });
                 var markAsReadButton = $('<button/>', {
@@ -129,9 +101,7 @@
 
                 $('#tblNotifications').append(tr);
             });
-        };
-
-
+        }
 
 
 
@@ -160,9 +130,7 @@
                     console.log(error);
                 }
             });
-        };
-
-
+        }
         function MarkNotificationAsRead(notificationId) {
             console.log('Marking notification as read with ID: ' + notificationId);
 
@@ -177,41 +145,200 @@
                 },
                 success: function (result) {
                     console.log('Notification marked as read successfully!');
-                    LoadNotifications();
+                    console.log(result);
+                    InvokeNotifications(username); //refresh the notification
                 },
                 error: function (error) {
                     console.log('Error marking notification as read:');
                     console.log(error);
                 }
             });
-        };
+        }
+     
 
-                tr.append(`<td><button class="btn btn-danger" onclick="DeleteNotification(${JSON.stringify(notification)})">Delete</button></td>`);
-                $('#tblNotifications').append(tr);
+
+    </script>*@
+
+    <script>
+
+        "use strict";
+        var username = '@User.Identity.Name';
+        //define connection to hub
+        var connection = new signalR.HubConnectionBuilder().withUrl("/NotificationsHub").build();
+
+        //start the hub connection
+        $(function () {
+            connection.start().then(function () {
+                
+                InvokeNotifications(username); //to load existing list of notifications
+            }).catch(function (err) {
+                return console.error(err.toString());
+            });
+        });
+
+
+        function InvokeNotifications(username) {
+            var url = "../Notifications/GetForUser?username=" + username;
+            console.log(url);
+            $.get(url, function (nData) {
+                BindNotificationsToCard(nData);
             });
         };
+        //the server will call this will updated notification list on every database change
+        connection.on("getUpdatedNotifications", function (notifications) {
+            BindNotificationsToCard(notifications);
+            InvokeNotifications(username); //refresh the notification
+        });
 
-        
+        function BindNotificationsToCard(notifications) {
+            console.log(notifications);
+            $('#notificationList').empty();
 
-        //function DeleteNotification(notification) {
-        //    console.log('notification: ' + JSON.stringify(notification));
+            $.each(notifications, function (index, notification) {
+                var notificationCard = $('<div/>', {
+                    class: 'card bg-light mb-3'
+                });
+
+                var notificationCardBody = $('<div/>', {
+                    class: 'card-body'
+                });
+
+                var notificationTitle = $('<h5/>', {
+                    class: 'card-title',
+                    text: notification.notificationText
+                });
+
+                var notificationDate = $('<h6/>', {
+                    class: 'card-text',
+                    text: new Date(notification.generatedAt).toLocaleString()
+                });
+
+                var notificationStatus = $('<h6/>', {
+                    class: 'card-subtitle mb-2',
+                    text: notification.isRead ? 'Read' : 'Not read'
+                });
+
+                var notificationContent = $('<p/>', {
+                    class: 'card-text',
+                    text: notification.notificationContent
+                });
+
+                var deleteButton = $('<button/>', {
+                    type: 'button',
+                    class: 'btn btn-danger ml-2',
+                    text: 'Delete',
+                    click: function () {
+                      
+                            DeleteNotification(notification.notificationId);
+                        
+                    }
+                });
+
+                var markAsReadButton = null;
+                if (!notification.isRead) {
+                    markAsReadButton = $('<button/>', {
+                        type: 'button',
+                        class: 'btn btn-primary ml-2',
+                        text: 'Mark as Read',
+                        click: function () {
+                            MarkNotificationAsRead(notification.notificationId);
+                        }
+                    });
+                }
+                var antiForgeryToken = $('input:hidden[name="__RequestVerificationToken"]').val();
+                var antiForgeryInput = $('<input/>', {
+                    type: 'hidden',
+                    name: '__RequestVerificationToken',
+                    value: antiForgeryToken
+                });
+
+
+                notificationCardBody.append(notificationTitle);
+                notificationCardBody.append(notificationDate);
+                notificationCardBody.append(notificationStatus);
+                notificationCardBody.append(notificationContent);
+                notificationCardBody.append(deleteButton);
+                notificationCardBody.append(markAsReadButton);
+                notificationCard.append(notificationCardBody);
+                $('#notificationList').append(notificationCard);
+            });
+        }
+
+        function DeleteNotification(id) {
+            console.log('Deleting notification with ID: ' + id);
+      
+            // Send an AJAX request to the server to delete the notification
+            $.ajax({
+                url: `/Notifications/Delete/${id}`,
+                type: 'DELETE',
+                data: { id: id },
+                headers: {
+                    "RequestVerificationToken": $('input:hidden[name="__RequestVerificationToken"]').val()
+                },
+                success: function (result) {
+
+                    // Handle the success response and perform any necessary actions
+                    alert('Delete successful!');
+                    InvokeNotifications(username); //refresh the notification
+
+
+                },
+                error: function (error) {
+                    console.log('Error deleting notification:'+ id);
+                    console.log(error);
+                }
+            });
+        }
+
+        //function DeleteNotification(id) {
+        //    console.log('Deleting notification with ID: ' + id);
 
         //    // Send an AJAX request to the server to delete the notification
         //    $.ajax({
-        //        url: `/Notifications/DeleteNotification/${notification.id}`,
-        //        type: 'POST',
-        //        data: { id: notification.id },
-        //        success: function (result) {
-        //            console.log('DeleteNotification success');
-        //            // Refresh the notifications table
-        //            InvokeNotifications();
+        //        url: `/Notifications/Delete/${id}`,
+        //        type: 'DELETE',
+        //        data: { id: id },
+        //        beforeSend: function (xhr) {
+        //            xhr.setRequestHeader("X-CSRF-TOKEN",
+        //                $('input:hidden[name="__RequestVerificationToken"]').val());
         //        },
-        //        error: function (xhr, status, error) {
-        //            console.log('DeleteNotification error: ' + error);
+        //        success: function (result) {
+
+        //            // Handle the success response and perform any necessary actions
+        //            alert('Delete successful!');
+        //            InvokeNotifications(username); //refresh the notification
+
+
+        //        },
+        //        error: function (error) {
+        //            console.log('Error deleting notification:');
+        //            console.log(error);
         //        }
         //    });
         //}
-    </script>
+        function MarkNotificationAsRead(notificationId) {
+            console.log('Marking notification as read with ID: ' + notificationId);
 
+            // Send an AJAX request to the server to mark the notification as read
+            $.ajax({
+                url: `/Notifications/MarkAsRead/${notificationId}`,
+                type: 'PUT',
+                data: { id: notificationId },
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("X-CSRF-TOKEN",
+                        $('input:hidden[name="__RequestVerificationToken"]').val());
+                },
+                success: function (result) {
+                    console.log('Notification marked as read successfully!');
+                    console.log(result);
+                    InvokeNotifications(username); //refresh the notification
+                },
+                error: function (error) {
+                    console.log('Error marking notification as read:');
+                    console.log(error);
+                }
+            });
+        }
+    </script>
 
 }

@@ -14,7 +14,7 @@ using ProjectManagement.ViewModels;
 
 namespace ProjectManagement.Controllers
 {
-    
+    [Authorize]
     public class NotificationsController : Controller
     {
         private readonly ProjectManagementContext _context;
@@ -68,7 +68,7 @@ namespace ProjectManagement.Controllers
         // POST: Notifications/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-  
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Notification viewModel, String recipent)
@@ -147,7 +147,7 @@ namespace ProjectManagement.Controllers
         }
 
         // GET: Notifications/Delete/5
-        
+
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null || _context.Notifications == null)
@@ -204,23 +204,23 @@ namespace ProjectManagement.Controllers
             var notification = await _context.Notifications.FindAsync(id);
             if (notification != null)
             {
-               notification.IsRead = true; // Mark the notification as read
+                notification.IsRead = true; // Mark the notification as read
                 _context.Update(notification);
                 // and save changes to the database
-                 _context.SaveChanges();
+                _context.SaveChanges();
                 await NotificationBroadcast();
             }
-           
+
             // Return to the notifications page
             return Redirect("/Notifications/Client");
 
-            }
-  
-           
+        }
+
+
 
         private bool NotificationExists(int id)
         {
-          return (_context.Notifications?.Any(e => e.NotificationId == id)).GetValueOrDefault();
+            return (_context.Notifications?.Any(e => e.NotificationId == id)).GetValueOrDefault();
         }
         public async Task<IActionResult> Client()
         {
@@ -245,7 +245,7 @@ namespace ProjectManagement.Controllers
         {
             await _hubcontext.NotificationsHubBroadcast(_context.Notifications.ToList());
         }
-        public static async System.Threading.Tasks.Task PushNotification(String recipient, String message, ProjectManagementContext context)
+        public static async System.Threading.Tasks.Task PushNotification2(String recipient, String message, ProjectManagementContext context)
         {
             // create notification obj
             var notification = new Notification
@@ -256,9 +256,32 @@ namespace ProjectManagement.Controllers
                 NotificationText = message,
 
             };
-             context.Notifications.Add(notification);
+            context.Notifications.Add(notification);
             await context.SaveChangesAsync();
 
+        }
+
+        public static async System.Threading.Tasks.Task<List<Notification>> PushNotification(string recipient, string message, ProjectManagementContext context, IHubContext<NotificationsHub> hubContext)
+        {
+            // Create a new notification object
+            var notification = new Notification
+            {
+                GeneratedAt = DateTime.Now,
+                IsRead = false,
+                Recipient = recipient,
+                NotificationText = message
+            };
+
+            // Add the notification to the database
+            context.Notifications.Add(notification);
+            await context.SaveChangesAsync();
+
+            // Get all notifications from the database, including the new notification
+            var notifications = await context.Notifications.ToListAsync();
+
+            // Broadcast the updated list of notifications to all clients
+            await hubContext.Clients.All.SendAsync("getUpdatedNotifications", notifications);
+           return notifications;
         }
     }
 }

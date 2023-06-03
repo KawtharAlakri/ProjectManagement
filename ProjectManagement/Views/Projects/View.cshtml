@@ -7,69 +7,82 @@
 }
 
 @Html.Partial("_projectTabs", Model.project)
+@{
+    if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger mt-4">
+            <ul>
+                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <li>@error.ErrorMessage</li>
+                }
+            </ul>
+        </div>
+    }
+    else
+    {
+        //<style>
+        //    .card-group {
+        //        width: 60%;
+        //    }
 
-@if (!ViewData.ModelState.IsValid)
-{
-    <div class="alert alert-danger mt-4">
-        <ul>
-            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-            {
-                <li>@error.ErrorMessage</li>
-            }
-        </ul>
-    </div>
-}else{
-   
+        //    #daysLeft {
+        //        margin-left: 20px;
+        //    }
+        //</style>
+        <br />
 
-   
-
-    <div class="text-center mt-4">
-
-        <div class="col-md-6">
-            <div class="card text-white bg-danger mb-3" style="max-width: 10rem;">
-                <div class="card-header">Overdue tasks</div>
-                <div class="card-body">
-                    <h4 class="card-title" id="overdueTaskCount"></h4>
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h2 id="daysLeft">
+                    <!--text from the ajax req -->
+                    </h2>
+                    
+                </div>
+                <div class="col-md-6">
+                    <div class="card-group d-flex justify-content-end">
+                        
+                        <div class="card text-white bg-danger mx-2 mb-3" style="max-width: 10rem;">
+                            <div class="card-header">Overdue tasks</div>
+                            <div class="card-body">
+                                <h4 class="card-title" id="overdueTaskCount"></h4>
+                            </div>
+                        </div>
+                        <div class="card text-white bg-warning mx-2 mb-3" style="max-width: 10rem;">
+                            <div class="card-header">In Progress</div>
+                            <div class="card-body">
+                                <h4 class="card-title" id="inProgressTaskCount"></h4>
+                            </div>
+                        </div>
+                        <div class="card text-white bg-success mx-2 mb-3" style="max-width: 10rem;">
+                            <div class="card-header">Completed</div>
+                            <div class="card-body">
+                                <h4 class="card-title" id="completedCount"></h4>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="card text-white bg-warning mb-3" style="max-width: 10rem;">
-                <div class="card-header">In Progress</div>
-                <div class="card-body">
-                    <h4 class="card-title" id="inProgressTaskCount"></h4>
+            <br />
+            <div class="row">
+                <div class="col-md-6">
+                    <div id="piechart_div" style="border: 1px solid #ccc;"></div>
                 </div>
-            </div>
-            <div class="card text-white bg-success mb-3" style="max-width: 10rem;">
-                <div class="card-header">Completed</div>
-                <div class="card-body">
-                    <h4 class="card-title" id="completedCount"></h4>
+                <div class="col-md-6">
+                    <div id="barchart_div" style="border: 1px solid #ccc;"></div>
                 </div>
             </div>
         </div>
-
-        <div class="row">
-            <div class="col-md-6">
-                <div id="piechart_div" style="border: 1px solid #ccc"></div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-6">
-                <div id="barchart_div" style="border: 1px solid #ccc"></div>
-            </div>
-        </div>
-
-
-
-
-    </div>
+    
+}
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         //on document ready return the number of each task status
         $(document).ready(function () {
-
-            var projectId = '@Model.project.ProjectId';
-            console.log(projectId);
+        var projectId = '@Model.project.ProjectId';
+          
             $.ajax({
                 type: 'GET',
                 dataType: 'json',
@@ -88,9 +101,42 @@
                     console.log(error);
                 }
             });
-        });
+      
+// ajax for the days left
+    $.ajax({
+        type: 'GET',
+        dataType: 'json',
+        contentType: 'application/json',
+        url: '/Projects/DaysLeft?projectId=' + projectId,
+        success: function (data) {
+                    console.log(data);
+                    var daysLeft = data.daysLeft;
+                    if (typeof daysLeft === 'number') {
+                        if (daysLeft > 0) {
+                            $('#daysLeft').text(daysLeft + " days left");
+                        }
+                        else if (daysLeft == 0) {
+                            $('#daysLeft').text("Today is the due date");
+                        }
+                        else {
+                            $('#daysLeft').text("Overdue by " + (-daysLeft) + " days");
+                        }
+                    }
+                    else if (typeof daysLeft === 'string') {
+                        $('#daysLeft').text(daysLeft);
+                    }
+                    else {
+                        $('#daysLeft').text('N/A');
+                    }
+        },
+        error: function (error) {
+            console.log(error);
+        }
+    });
+    });
      
     </script>
+
     <!-- Required JavaScript libraries -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha384-QSYPXCwokHnmJxYmHp4+JLgJ2xagQceZBoA74QG0A6S1pXo6q2kEpGCTqXJBy7JJ" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.5.0/js/bootstrap.bundle.min.js" integrity="sha512-4JfdHsAmdrU2riEkL9Ler+Hlqz1zRQc5HxW5P7UEpIStzsJNARBBle6RxreF4KBvLV0kGYBM+yH1U5rd2OsUKQ==" crossorigin="anonymous"></script>
@@ -130,21 +176,85 @@
                 completedCount = data['completed'];
                 chartData.push(['completed', completedCount]);
             }
+        var overdueCount = 0;
+        if (data.hasOwnProperty('overdue')) {
+            overdueCount = data['overdue'];
+            chartData.push(['overdue', overdueCount]);
+        }
 
             var chartOptions = {
-                title: 'Number of In progress VS Completed tasks',
+                title: 'Percentage of project tasks',
                 pieHole: 0.4,
                 width: 500,
-                height: 300
+                height: 300,
+            legend: { position: 'Right' },
+              
+            colors: ['#2c3e50', '#18BC9C', '#E74C3C']
             };
 
+        // Store the original colors in an array
+        var originalColors = chartOptions.colors.slice();
             var chart = new google.visualization.PieChart(document.getElementById('piechart_div'));
             chart.draw(google.visualization.arrayToDataTable(chartData), chartOptions);
+
+        // Add an event listener to the chart container that listens for double click 
+        var chartContainer = document.getElementById('piechart_div');
+        chartContainer.addEventListener('dblclick', function () {
+            resetChart();
+        });
+
+        function resetChart() {
+            //get the colors title  and redraw 
+            chartOptions.title = 'Percentage of Project Tasks';
+            chartOptions.colors = originalColors.slice();
+            chart.draw(google.visualization.arrayToDataTable(chartData), chartOptions);
+        }
+
+        // Add an event listener to the legend items
+        google.visualization.events.addListener(chart, 'select', function () {
+            var selectedItem = chart.getSelection()[0];
+            if (selectedItem) {
+                var category = chartData[selectedItem.row + 1][0];
+
+                var newData = [];
+                newData.push(['Task Status', 'Count']);
+
+                if (category === 'in progress') {
+                    if (completedCount > 0) {
+                        newData.push(['completed', completedCount]);
+                    }
+                    if (overdueCount > 0) {
+                        newData.push(['overdue', overdueCount]);
+                    }
+                    chartOptions.title = 'Percentage of Project Tasks (excluding In Progress)';
+                    chartOptions.colors = ['#18BC9C', '#E74C3C'];
+                } else if (category === 'completed') {
+                    if (inProgressCount > 0) {
+                        newData.push(['in progress', inProgressCount]);
+                    }
+                    if (overdueCount > 0) {
+                        newData.push(['overdue', overdueCount]);
+                    }
+                    chartOptions.title = 'Percentage of Project Tasks (excluding Completed)';
+                    chartOptions.colors = ['#2c3e50', '#E74C3C'];
+                } else if (category === 'overdue') {
+                    if (inProgressCount > 0) {
+                        newData.push(['in progress', inProgressCount]);
+                    }
+                    if (completedCount > 0) {
+                        newData.push(['completed', completedCount]);
+                    }
+                    chartOptions.title = 'Percentage of Project Tasks (excluding Overdue)';
+                    chartOptions.colors = ['#2c3e50', '#18BC9C'];
+                }
+
+                chart.draw(google.visualization.arrayToDataTable(newData), chartOptions);
+            }
+        });
         }
     </script>
-
+    
     <script>
-
         $(document).ready(function () {
             var projectId = '@Model.project.ProjectId';
             $.ajax({
@@ -174,13 +284,30 @@
             }
 
             var chartOptions = {
-                title: 'Number of Tasks by Member',
+                title: 'Number of Tasks per Member',
                 legend: { position: 'none' },
+                colors: ['#E74C3C'],
+                tooltip: true,
                 width: 500,
-                height: 300
+                height: 300,
+                animation: {
+                    startup: true,
+                    duration: 1000
+                },
+                hAxis: {
+                    title: 'Member'
+                },
+                vAxis: {
+                    title: 'Task Count',
+                    minValue: 0
+                },
+                chartArea: {
+                    width: '50%',
+                    height: '70%'
+                }
             };
 
-            var chart = new google.visualization.BarChart(document.getElementById('barchart_div'));
+            var chart = new google.visualization.ColumnChart(document.getElementById('barchart_div'));
             chart.draw(google.visualization.arrayToDataTable(chartData), chartOptions);
         }
     </script>
