@@ -26,10 +26,11 @@ namespace ProjectManagement.Models
         public string ProjectName { get; set; } = null!;
         [Column("created_at", TypeName = "date")]
         [Display(Name = "Created At")]
+        [DataType(DataType.Date)]
         public DateTime CreatedAt { get; set; }
         [Column("due_date", TypeName = "date")]
         [Display(Name = "Due Date")]
-        
+        [DataType(DataType.Date)]
         public DateTime? DueDate { get; set; }
         [Column("budget", TypeName = "decimal(8, 2)")]
         public decimal? Budget { get; set; }

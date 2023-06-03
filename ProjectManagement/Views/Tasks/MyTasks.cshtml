@@ -77,34 +77,32 @@
             <th>
                 @Html.DisplayNameFor(model => model.Description)
             </th>
-            <th>
+            @*<th>
                 @Html.DisplayNameFor(model => model.CreatedAt)
-            </th>
+            </th>*@
             <th>
                 @Html.DisplayNameFor(model => model.DueDate)
             </th>
-           
             <th>
                 @Html.DisplayNameFor(model => model.Project)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.StatusNavigation)
             </th>
-            <th></th>
         </tr>
     </thead>
     <tbody> 
 @foreach (var item in Model) {
-        <tr>
-            <td>
+            <tr onclick="location.href='@Url.Action("Details", new { id = item.TaskId })';" style="cursor:pointer;">
+                <td>
                 @Html.DisplayFor(modelItem => item.TaskName)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Description)
             </td>
-            <td>
+            @*<td>
                 @Html.DisplayFor(modelItem => item.CreatedAt)
-            </td>
+            </td>*@
             <td>
                 @Html.DisplayFor(modelItem => item.DueDate)
             </td>
@@ -112,11 +110,9 @@
                 @Html.DisplayFor(modelItem => item.Project.ProjectName)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.StatusNavigation.StatusName)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.TaskId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.TaskId">Details</a>
+                        <span class="badge @GetBadgeClass(item.Status)">                     
+                            @Html.DisplayFor(modelItem => item.StatusNavigation.StatusName)
+                            </span>
             </td>
         </tr>
         
@@ -124,3 +120,19 @@
     </tbody>
 </table>
 
+@functions {
+    public string GetBadgeClass(string status)
+    {
+        switch (status.ToLower())
+        {
+            case "completed":
+                return "badge bg-success";
+            case "overdue":
+                return "badge bg-danger";
+            case "in progress":
+                return "badge bg-warning";
+            default:
+                return "badge";
+        }
+    }
+}

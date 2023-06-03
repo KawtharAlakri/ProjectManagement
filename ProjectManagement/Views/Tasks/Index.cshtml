@@ -82,9 +82,9 @@
             <th>
                 @Html.DisplayNameFor(model => model.Description)
             </th>
-            <th>
+            @*<th>
                 @Html.DisplayNameFor(model => model.CreatedAt)
-            </th>
+            </th>*@
             <th>
                 @Html.DisplayNameFor(model => model.DueDate)
             </th>
@@ -97,44 +97,51 @@
             <th>
                 @Html.DisplayNameFor(model => model.StatusNavigation)
             </th>
-            <th></th>
         </tr>
     </thead>
     <tbody>
 @foreach (var item in Model) {
-        <tr>
+            <tr onclick="location.href='@Url.Action("Details", new { id = item.TaskId })';" style="cursor:pointer;">
             <td>
                 @Html.DisplayFor(modelItem => item.TaskName)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Description)
             </td>
-            <td>
+            @*<td>
                 @Html.DisplayFor(modelItem => item.CreatedAt)
-            </td>
+            </td>*@
             <td>
                 @Html.DisplayFor(modelItem => item.DueDate)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.AssignedToNavigation.Username)
             </td>
-            @*<td>
-                @Html.DisplayFor(modelItem => item.Project.ProjectId)
-            </td>*@
+           
             <td>
-                @Html.DisplayFor(modelItem => item.StatusNavigation.StatusName)
-            </td>
-            <td>
-                @*members have read/update access to tasks *@
-                    <a asp-action="Edit" asp-route-id="@item.TaskId">Edit</a> <text>|</text>
-                    <a asp-action="Details" asp-route-id="@item.TaskId">Details</a> <text>|</text>
-                    @*//project manager have also delete *@                    
-                    @if (User.Identity.Name == ViewBag.project_manager)
-                    {
-                        <a asp-action="Delete" asp-route-id="@item.TaskId">Delete</a>
-                    }
-            </td>
+                    <span class="badge @GetBadgeClass(item.Status)">
+                        @Html.DisplayFor(modelItem => item.StatusNavigation.StatusName)
+                    </span>
+                </td>
+            
         </tr>
 }
     </tbody>
 </table>
+
+@functions {
+    public string GetBadgeClass(string status)
+    {
+        switch (status.ToLower())
+        {
+            case "completed":
+                return "badge bg-success";
+            case "overdue":
+                return "badge bg-danger";
+            case "in progress":
+                return "badge bg-warning";
+            default:
+                return "badge";
+        }
+    }
+}
