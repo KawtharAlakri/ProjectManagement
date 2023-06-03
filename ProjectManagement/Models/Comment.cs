@@ -14,9 +14,9 @@ namespace ProjectManagement.Models
         public int CommentId { get; set; }
         [Column("comment_text")]
         [Unicode(false)]
-        [Required]
         [Display(Name ="Comment Text")]
         [StringLength(255, ErrorMessage = "The Comment tex field must be a maximum of 255 characters.")]
+        [Required(ErrorMessage = "The Comment text field must be filled.")]
         public string CommentText { get; set; } = null!;
         [Column("posted_at", TypeName = "date")]
         [Display(Name = "Posted at")]

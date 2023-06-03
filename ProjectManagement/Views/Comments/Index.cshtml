@@ -113,3 +113,11 @@
         });
     </script>
 }
+
+
+@*show validation messages*@
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

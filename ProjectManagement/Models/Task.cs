@@ -21,11 +21,13 @@ namespace ProjectManagement.Models
         [StringLength(255)]
         [Unicode(false)]
         [Display(Name = "Assigned To")]
+        [Required(ErrorMessage = "You must assign the task to a member.")]
         public string AssignedTo { get; set; } = null!;
         [Column("task_name")]
         [StringLength(255)]
         [Unicode(false)]
         [Display(Name = "Task Name")]
+        [Required(ErrorMessage = "The Task Name field must be filled.")]
         public string TaskName { get; set; } = null!;
         [Column("description")]
         [StringLength(255)]

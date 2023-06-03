@@ -22,7 +22,7 @@ namespace ProjectManagement.Models
         [StringLength(255)]
         [Unicode(false)]
         [Display(Name = "URL")]
-        [Required(ErrorMessage = "The Docment field is required.")]
+        [Required(ErrorMessage = "Please select a document.")]
         public string FilePath { get; set; } = null!;
         [Column("document_type")]
         [StringLength(25)]

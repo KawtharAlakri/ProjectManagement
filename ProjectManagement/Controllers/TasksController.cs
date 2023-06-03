@@ -219,10 +219,11 @@ namespace ProjectManagement.Controllers
             {
                 //add task
                 _context.Add(task);
+                // log user action
+                LogsController.ActionLogChanges(User.Identity.Name, task, EntityState.Added, ControllerContext, _context);
                 await _context.SaveChangesAsync();
 
-                //log user action
-                LogsController.ActionLogChanges(User.Identity.Name, task, EntityState.Added, ControllerContext, _context);
+                
 
                 TempData["SuccessMessage"] = "Task Created Successfully.";
 
@@ -307,10 +308,11 @@ namespace ProjectManagement.Controllers
                 try
                 {
                     _context.Update(task);
-                    await _context.SaveChangesAsync();
-
                     //log user action
                     LogsController.ActionLogChanges(User.Identity.Name, task, EntityState.Modified, ControllerContext, _context);
+                    await _context.SaveChangesAsync();
+
+                    
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -381,11 +383,12 @@ namespace ProjectManagement.Controllers
 
                 //remove task
                 _context.Tasks.Remove(task);
+                //log user action
+                LogsController.ActionLogChanges(User.Identity.Name, task, EntityState.Deleted, ControllerContext, _context);
             }
             await _context.SaveChangesAsync();
 
-            //log user action
-            LogsController.ActionLogChanges(User.Identity.Name, task, EntityState.Deleted, ControllerContext, _context);
+            
 
             TempData["SuccessMessage"] = "Task Deleted Successfully.";
             return RedirectToAction(nameof(Index), new {id = task.ProjectId});
