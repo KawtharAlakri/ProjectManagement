@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Models;
+using ProjectManagement.ViewModels;
 
 namespace ProjectManagement.Controllers
 {
@@ -22,10 +23,14 @@ namespace ProjectManagement.Controllers
         }
 
         // GET: Comments
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int? id)
         {
-            var projectManagementContext = _context.Comments.Include(c => c.Author).Include(c => c.Task);
-            return View(await projectManagementContext.ToListAsync());
+            var projectManagementContext = _context.Comments.Include(c => c.Author).Include(c => c.Task).Where(c=>c.TaskId == id);
+            var task = _context.Tasks.Find(id);
+            var project = _context.Projects.Include(x => x.ProjectManagerNavigation).FirstOrDefault(x=> x.ProjectId == task.ProjectId);
+            TaskDetailsVM vm = new TaskDetailsVM { task = _context.Tasks.Find(id), project = project, comments = await projectManagementContext.ToListAsync() };
+
+            return View(vm);
         }
 
         // GET: Comments/Details/5
@@ -82,12 +87,12 @@ namespace ProjectManagement.Controllers
                 LogsController.ActionLogChanges(User.Identity.Name, comment, EntityState.Added, ControllerContext, _context);
 
                 TempData["SuccessMessage"] = "Your comment has been added successfully.";
-                return RedirectToAction("Details", "Tasks", new { id = comment.TaskId }); //first parameter is the action, then controller, then action parameter
+                return RedirectToAction("Index", new { id = comment.TaskId }); //first parameter is the action, then controller, then action parameter
             }
 
             //return error message 
             TempData["ErrorMessage"] = "An error occurred, try adding your comment again.";
-            return RedirectToAction("Details", "Tasks", new { id = comment.TaskId }); //first parameter is the action, then controller, then action parameter
+            return RedirectToAction("Index", new { id = comment.TaskId }); //first parameter is the action, then controller, then action parameter
         }
 
         // GET: Comments/Edit/5
@@ -153,7 +158,7 @@ namespace ProjectManagement.Controllers
                 }
                 //redirect to task details (where comments listed) and return success message 
                 TempData["SuccessMessage"] = "Your comment has been updated successfully.";
-                return RedirectToAction("Details", "Tasks", new { id = comment.TaskId });
+                return RedirectToAction("Index", new { id = comment.TaskId }); //first parameter is the action, then controller, then action parameter
             }
 
             //stay at the samem page and show error message 
@@ -178,7 +183,7 @@ namespace ProjectManagement.Controllers
                 return NotFound();
             }
             TempData["DeleteComment"] = comment.CommentId;
-            return RedirectToAction("Details", "Tasks", new { id = comment.TaskId});
+            return RedirectToAction("Index", new { id = comment.TaskId }); //first parameter is the action, then controller, then action parameter
         }
 
         // POST: Comments/Delete/5
@@ -202,7 +207,7 @@ namespace ProjectManagement.Controllers
             LogsController.ActionLogChanges(User.Identity.Name, comment, EntityState.Deleted, ControllerContext, _context);
 
             TempData["SuccessMessage"] = "Comment Deleted Successfully.";
-            return RedirectToAction("Details", "Tasks", new { id = comment.TaskId });
+            return RedirectToAction("Index", new { id = comment.TaskId }); //first parameter is the action, then controller, then action parameter
         }
 
         private bool CommentExists(int id)

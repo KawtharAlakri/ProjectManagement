@@ -1,59 +1,59 @@
-﻿@model IEnumerable<ProjectManagement.Models.Document>
-
+﻿@model ProjectManagement.ViewModels.DocumentDetailsVM
 @{
     ViewData["Title"] = "Index";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["ActiveTab"] = "Documents"; // Set the active tab based on the current page
 }
 
-<h1>@ViewBag.Task.TaskName Documents</h1>
+@Html.Partial("_taskTabs", Model.task)
+
 @if (TempData.ContainsKey("ErrorMessage") && !String.IsNullOrEmpty(TempData["ErrorMessage"].ToString()))
 {
-    <div class="alert alert-dismissible alert-danger">
+    <div class="alert alert-dismissible alert-danger mt-3">
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         <strong>@TempData["ErrorMessage"] </strong>
     </div>
 }
 @if (TempData.ContainsKey("SuccessMessage") && !String.IsNullOrEmpty(TempData["SuccessMessage"].ToString()))
 {
-    <div class="alert alert-dismissible alert-success">
+    <div class="alert alert-dismissible alert-success mt-3">
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         <strong>@TempData["SuccessMessage"]</strong>
     </div>
 }
-<p>
-    <a asp-action="Create" asp-route-taskid="@ViewBag.Task.TaskId">Attach Document</a>
-</p>
-<table class="table">
+
+<div class="d-flex justify-content-end mt-3">
+    <a asp-action="Create" asp-route-id="@Model.task.TaskId" class="btn btn-primary">
+        <i class="bi bi-plus"></i> Add Documents
+    </a>
+</div>
+
+<table class="table mt-3">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.DocumentName)
+                @Html.DisplayNameFor(model => model.document.DocumentName)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.FilePath)
+                @Html.DisplayNameFor(model => model.document.DocumentType)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.DocumentType)
+                @Html.DisplayNameFor(model => model.document.UploadedAt)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.UploadedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.UploadedBy)
+                @Html.DisplayNameFor(model => model.document.UploadedBy)
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model)
+        @foreach (var item in Model.documents)
         {
             <tr>
                 <td>
                     @Html.DisplayFor(modelItem => item.DocumentName)
                 </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.FilePath)
-                </td>
+                
                 <td>
                     @Html.DisplayFor(modelItem => item.DocumentType)
                 </td>
@@ -64,9 +64,23 @@
                     @Html.DisplayFor(modelItem => item.UploadedBy)
                 </td>
                 <td>
-                    <a asp-action="Details" asp-route-id="@item.DocumentId">View</a> |
-                    <a href="#" onclick="confirmDelete('@item.DocumentId', '@item.DocumentName')">Delete</a>
+                    @if (item.DocumentType == "Photo")
+                    {
+                        <a href="@Url.Action("GetImage", "Documents", new { fileName = item.FilePath })" data-lightbox="image-gallery">View Image</a>
+                    }
+                    else
+                    {
+                        @if (!string.IsNullOrEmpty(item.FilePath))
+                        {
+                            string fileUrl = Url.Action("GetFile", "Documents", new { fileName = item.FilePath });
+                            <a href="@fileUrl" target="_blank">Download File</a>
+                        }
+                    }
                 </td>
+                <td style="text-align: right;">
+                    <a class="px-4" style="text-decoration: none; color: inherit; margin-right: 2px;" href="#" onclick="confirmDelete('@item.DocumentId', '@item.DocumentName')"><i class="bi bi-trash-fill"></i></a>
+                </td>
+
             </tr>
         }
     </tbody>
@@ -94,6 +108,7 @@
     </div>
 </div>
 
+@*delete modal *@
 <script>
     function confirmDelete(documentId, documentName) {
         // Set the document ID and name in the modal
@@ -111,3 +126,4 @@
         modal.show();
     }
 </script>
+

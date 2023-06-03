@@ -14,42 +14,42 @@
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="@Model.project.ProjectId" />
-            <div class="form-group">
+            <div class="form-group  mb-3">
                 <label asp-for="@Model.project.ProjectName" class="control-label"></label>
                 <input asp-for="@Model.project.ProjectName" class="form-control" />
                 <span asp-validation-for="@Model.project.ProjectName" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            <div class="form-group  mb-3">
                 <label asp-for="@Model.project.CreatedAt" class="control-label"></label>
                 <input asp-for="@Model.project.CreatedAt" class="form-control" readonly />
             </div>
-            <div class="form-group">
+            <div class="form-group  mb-3">
                 <label asp-for="@Model.project.DueDate" class="control-label"></label>
                 <input asp-for="@Model.project.DueDate" class="form-control" />
                 <span asp-validation-for="@Model.project.DueDate" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            <div class="form-group  mb-3">
                 <label asp-for="@Model.project.Budget" class="control-label"></label>
                 <input asp-for="@Model.project.Budget" class="form-control" />
                 <span asp-validation-for="@Model.project.Budget" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            <div class="form-group  mb-3">
                 <label asp-for="@Model.project.Description" class="control-label"></label>
                 <input asp-for="@Model.project.Description" class="form-control" />
                 <span asp-validation-for="@Model.project.Description" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            <div class="form-group  mb-3">
                 <label asp-for="@Model.project.ProjectManager" class="control-label"></label>
                 <input asp-for="@Model.project.ProjectManager" class="form-control" readonly />
             </div>
-            <div class="form-group">
+            <div class="form-group mb-3">
                 <label asp-for="@Model.project.Status" class="control-label"></label>
                 <select asp-for="@Model.project.Status" class="form-control" asp-items="ViewBag.Status"></select>
                 <span asp-validation-for="@Model.project.Status" class="text-danger"></span>
             </div>
             
 
-            <div class="form-group" id="list">
+            <div class="form-group  mb-3" id="list">
                 <label asp-for="selectedUsers" class="control-label">Project Members</label>
                 <a href="#" onclick="manageUsers()"><b>Manage</b></a>
                 <ul>
@@ -59,7 +59,7 @@
                     }
                 </ul>
             </div>
-            <div class="form-group" id="select" hidden>
+            <div class="form-group  mb-3" id="select" hidden>
                 <label asp-for="@Model.selectedUsers" class="control-label">Project Members</label>
                 <select asp-for="@Model.selectedUsers" asp-items='new SelectList(Model.allUsers, "Username", "Username")' class="form-control" multiple></select>
                 <span asp-validation-for="@Model.selectedUsers" class="text-danger"></span>

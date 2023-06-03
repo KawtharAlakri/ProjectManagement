@@ -25,15 +25,18 @@ namespace ProjectManagement.Controllers
         }
 
         // GET: Documents
-        public async Task<IActionResult> Index(int? taskid)
+        public async Task<IActionResult> Index(int? id)
         {
             IQueryable<Document> documentsContext = _context.Documents.Include(d => d.Task).Include(d => d.UploadedByNavigation);
-            if (taskid != null)
+            DocumentDetailsVM vm = new DocumentDetailsVM();
+            if (id != null)
             {
-                ViewBag.Task = _context.Tasks.Find(taskid);
-                documentsContext = documentsContext.Where(d => d.TaskId == taskid);
-            } 
-            return View(await documentsContext.ToListAsync());
+                var task = _context.Tasks.Include(x=> x.Project).FirstOrDefault(x=>x.TaskId == id);
+                documentsContext = documentsContext.Where(d => d.TaskId == id);
+                vm.documents = documentsContext;
+                vm.task = task;
+            }
+            return View(vm);
         }
 
         // GET: Documents/Details/5
@@ -128,10 +131,10 @@ namespace ProjectManagement.Controllers
         }
 
         // GET: Documents/Create
-        public IActionResult Create(int? taskid)
+        public IActionResult Create(int? id)
         {
             //pass task id to create a document related to it
-            ViewBag.TaskId = taskid;
+            ViewBag.TaskId = id;
             return View();
         }
 
@@ -145,7 +148,8 @@ namespace ProjectManagement.Controllers
             if (ModelState.IsValid)
             {
                 Document document = new Document();
-                document.TaskId = documentVM.TaskId;
+                document.TaskId = documentVM.taskid;
+                document.Task = _context.Tasks.Find(document.TaskId);
                 document.DocumentName = documentVM.DocumentName;
                 document.UploadedAt = DateTime.Now;
                 document.UploadedBy = User.Identity.Name;
@@ -188,7 +192,7 @@ namespace ProjectManagement.Controllers
                 LogsController.ActionLogChanges(User.Identity.Name, document, EntityState.Added, ControllerContext, _context);
 
                 TempData["SuccessMessage"] = "Document Uploaded Successfully.";
-                return RedirectToAction("Index", new { taskid = document.TaskId });
+                return RedirectToAction("Index", new { id = document.TaskId });
             }
 
             return View(documentVM);
@@ -201,64 +205,7 @@ namespace ProjectManagement.Controllers
         }
      
 
-        // GET: Documents/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null || _context.Documents == null)
-            {
-                return NotFound();
-            }
-
-            var document = await _context.Documents.FindAsync(id);
-            if (document == null)
-            {
-                return NotFound();
-            }
-
-            //you're still not passing the file path (that is already there)
-            return View(document);
-        }
-
-        // POST: Documents/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("DocumentId,DocumentName,FilePath,DocumentType,UploadedAt,TaskId,UploadedBy")] Document document)
-        {
-            if (id != document.DocumentId)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(document);
-                    await _context.SaveChangesAsync();
-
-                    //log user action
-                    LogsController.ActionLogChanges(User.Identity.Name, document, EntityState.Modified, ControllerContext, _context);
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!DocumentExists(document.DocumentId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["TaskId"] = new SelectList(_context.Tasks, "TaskId", "TaskId", document.TaskId);
-            ViewData["UploadedBy"] = new SelectList(_context.Users, "Username", "Username", document.UploadedBy);
-            return View(document);
-        }
-
+     
         // GET: Documents/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
@@ -300,7 +247,7 @@ namespace ProjectManagement.Controllers
             LogsController.ActionLogChanges(User.Identity.Name, document, EntityState.Deleted, ControllerContext, _context);
 
             TempData["SuccessMessage"] = "Document Deleted Successfully.";
-            return RedirectToAction(nameof(Index), new { taskid = document.TaskId });
+            return RedirectToAction(nameof(Index), new { id = document.TaskId });
         }
 
         private bool DocumentExists(int id)

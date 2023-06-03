@@ -16,11 +16,13 @@ namespace ProjectManagement.Models
         [StringLength(255)]
         [Unicode(false)]
         [Display(Name ="Document Name")]
+        [Required(ErrorMessage ="The Docment Name field is required.")]
         public string DocumentName { get; set; } = null!;
         [Column("file_path")]
         [StringLength(255)]
         [Unicode(false)]
         [Display(Name = "URL")]
+        [Required(ErrorMessage = "The Docment field is required.")]
         public string FilePath { get; set; } = null!;
         [Column("document_type")]
         [StringLength(25)]

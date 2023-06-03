@@ -15,7 +15,7 @@ namespace ProjectManagement.Middleware
         {
             try
             {
-                // Call the next middleware in the pipeline
+                //Call the next middleware in the pipeline
                 await next(context);
             }
             catch (Exception ex)
