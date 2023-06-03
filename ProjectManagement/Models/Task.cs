@@ -33,6 +33,7 @@ namespace ProjectManagement.Models
         public string? Description { get; set; } 
         [Column("created_at", TypeName = "date")]
         [Display(Name = "Created At")]
+        [DataType(DataType.Date)]
         public DateTime CreatedAt { get; set; }
         [Column("due_date", TypeName = "date")]
         [Display(Name = "Due Date")]
