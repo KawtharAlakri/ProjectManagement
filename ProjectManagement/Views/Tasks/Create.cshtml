@@ -16,22 +16,22 @@
             <div class="form-group">
                 <input asp-for="@Model.project.ProjectId" class="form-control" hidden/>
             </div>
-            <div class="form-group">
+            <div class="form-group  mb-3">
                 <label asp-for="@Model.task.AssignedTo" class="control-label"></label>
                 <select asp-for="@Model.task.AssignedTo" class="form-control" asp-items="new SelectList(@Model.selectedUsers)"></select>
             </div>
-            <div class="form-group">
+            <div class="form-group mb-3">
                 <label asp-for="@Model.task.TaskName" class="control-label"></label>
                 <input asp-for="@Model.task.TaskName" class="form-control" />
                 <span asp-validation-for="@Model.task.TaskName" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            <div class="form-group mb-3">
                 <label asp-for="@Model.task.Description" class="control-label"></label>
                 <input asp-for="@Model.task.Description" class="form-control" />
                 <span asp-validation-for="@Model.task.Description" class="text-danger"></span>
             </div>
         
-            <div class="form-group">
+            <div class="form-group mb-3">
                 <label asp-for="@Model.task.DueDate" class="control-label"></label>
                 <input asp-for="@Model.task.DueDate" class="form-control" />
                 <span asp-validation-for="@Model.task.DueDate" class="text-danger"></span>
@@ -46,4 +46,5 @@
 <div>
     <a asp-action="Index">Back to List</a>
 </div>
+
 

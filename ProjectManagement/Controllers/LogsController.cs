@@ -44,17 +44,20 @@ namespace ProjectManagement.Controllers
             if (state == EntityState.Added || state == EntityState.Modified)
             {
                 var entry = context.Entry(entity);
+                // Get the original values before modifying the entity
+                var originalValues = entry.OriginalValues.Clone();
+
                 // Convert current values to a readable format
                 var currentValues = entry.CurrentValues.Properties
                     .ToDictionary(p => p.Name, p => entry.CurrentValues[p]?.ToString());
 
                 // Convert original values to a readable format
-                var originalValues = entry.OriginalValues.Properties
-                    .ToDictionary(p => p.Name, p => entry.OriginalValues[p]?.ToString());
+                var originalValuesDict = originalValues.Properties
+                    .ToDictionary(p => p.Name, p => originalValues[p]?.ToString());
 
                 // Serialize dictionaries to JSON strings
                 log.CurrentValue = JsonConvert.SerializeObject(currentValues);
-                log.OriginalValue = JsonConvert.SerializeObject(originalValues);
+                log.OriginalValue = JsonConvert.SerializeObject(originalValuesDict);
             }
             // Add the log to the context and save the changes
             context.Logs.Add(log);

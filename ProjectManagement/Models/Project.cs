@@ -19,21 +19,24 @@ namespace ProjectManagement.Models
         [Column("project_id")]
         public int ProjectId { get; set; }
         [Column("project_name")]
-        [StringLength(255)]
+        [StringLength(255, ErrorMessage = "The Project Name field must be a maximum of 255 characters.")]
         [Unicode(false)]
         [Display (Name = "Project Name")]
+        [Required]
         public string ProjectName { get; set; } = null!;
         [Column("created_at", TypeName = "date")]
         [Display(Name = "Created At")]
         public DateTime CreatedAt { get; set; }
         [Column("due_date", TypeName = "date")]
         [Display(Name = "Due Date")]
+        
         public DateTime? DueDate { get; set; }
-        [Column("budget", TypeName = "decimal(4, 2)")]
+        [Column("budget", TypeName = "decimal(8, 2)")]
         public decimal? Budget { get; set; }
         [Column("description")]
-        [StringLength(400)]
+        [StringLength(400, ErrorMessage = "The Description field must be a maximum of 400 characters.")]
         [Unicode(false)]
+        [Required]
         public string? Description { get; set; }
         [Column("project_manager")]
         [StringLength(255)]
@@ -57,5 +60,6 @@ namespace ProjectManagement.Models
         public virtual ICollection<Task>? Tasks { get; set; }
         [InverseProperty("Project")]
         public virtual ICollection<UserProject>? UserProjects { get; set; }
+
     }
 }

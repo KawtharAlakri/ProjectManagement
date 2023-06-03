@@ -1,0 +1,32 @@
+﻿@model ProjectManagement.Models.Task
+
+@{
+    string activeTab = ViewData["ActiveTab"]?.ToString();
+}
+
+<div class="d-flex justify-content-between align-items-center">
+    <h1 class="mt-4">@Model.TaskName</h1>
+    <div>
+    <a asp-action="Edit" asp-controller="Tasks" asp-route-id="@Model?.TaskId" class="btn btn-primary me-2">
+        <i class="bi bi-pencil-fill"></i> Edit
+    </a>
+    @if (Model.Project.ProjectManager == User.Identity.Name)
+    {
+            <a asp-action="Delete" asp-controller="Tasks" asp-route-id="@Model?.TaskId" class="btn btn-danger">
+                <i class="bi bi-trash-fill"></i> Delete
+            </a>
+    }
+    </div>
+</div>
+
+<ul class="nav nav-tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <a class="nav-link @(activeTab == "Details" ? "active" : "")" href="@Url.Action("Details", "Tasks", new { id = Model.TaskId })" aria-selected="@(activeTab == "Details" ? "true" : "false")" role="tab" tabindex="@(activeTab == "Details" ? "" : "-1")">Details</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link @(activeTab == "Comments" ? "active" : "")" href="@Url.Action("Index", "Comments", new { id = Model.TaskId })" aria-selected="@(activeTab == "Comments" ? "true" : "false")" role="tab" tabindex="@(activeTab == "Comments" ? "" : "-1")">Comments</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link @(activeTab == "Documents" ? "active" : "")" href="@Url.Action("Index", "Documents", new { id = Model.TaskId })" aria-selected="@(activeTab == "Documents" ? "true" : "false")" role="tab" tabindex="@(activeTab == "Documents" ? "" : "-1")">Documents</a>
+    </li>
+</ul>

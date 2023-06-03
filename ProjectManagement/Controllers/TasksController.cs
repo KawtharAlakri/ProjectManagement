@@ -287,7 +287,7 @@ namespace ProjectManagement.Controllers
             ViewData["AssignedTo"] = new SelectList(_context.Users, "Username", "Username", task.AssignedTo);
             ViewData["ProjectId"] = new SelectList(_context.Projects, "ProjectId", "ProjectId", task.ProjectId);
             ViewData["Status"] = new SelectList(_context.Statuses, "StatusName", "StatusName", task.Status);
-            return View(task);
+            return View(vm);
         }
 
         // GET: Tasks/Delete/5

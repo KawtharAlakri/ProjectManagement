@@ -5,7 +5,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace ProjectManagement.Models
 {
     [Table("Task")]
-    public partial class Task
+    public partial class Task 
+
     {
         public Task()
         {
@@ -35,6 +36,7 @@ namespace ProjectManagement.Models
         public DateTime CreatedAt { get; set; }
         [Column("due_date", TypeName = "date")]
         [Display(Name = "Due Date")]
+        [DataType(DataType.Date)]
         public DateTime? DueDate { get; set; }
         [Column("project_id")]
         public int ProjectId { get; set; }
@@ -58,5 +60,8 @@ namespace ProjectManagement.Models
         public virtual ICollection<Comment>? Comments { get; set; }
         [InverseProperty("Task")]
         public virtual ICollection<Document>? Documents { get; set; }
+
+
     }
+
 }
