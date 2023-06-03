@@ -25,11 +25,11 @@ namespace ProjectManagement.Controllers
         // GET: Comments
         public async Task<IActionResult> Index(int? id)
         {
+            //retreive comments for the task with (id)
             var projectManagementContext = _context.Comments.Include(c => c.Author).Include(c => c.Task).Where(c=>c.TaskId == id);
             var task = _context.Tasks.Find(id);
             var project = _context.Projects.Include(x => x.ProjectManagerNavigation).FirstOrDefault(x=> x.ProjectId == task.ProjectId);
             TaskDetailsVM vm = new TaskDetailsVM { task = _context.Tasks.Find(id), project = project, comments = await projectManagementContext.ToListAsync() };
-
             return View(vm);
         }
 
@@ -60,8 +60,6 @@ namespace ProjectManagement.Controllers
         }
 
         // POST: Comments/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("CommentId,CommentText,PostedAt,TaskId,AuthorId")] Comment comment)
@@ -79,13 +77,12 @@ namespace ProjectManagement.Controllers
             
             if (ModelState.IsValid)
             {
-                //add comment and return success message
+                //add comment and log user action
                 _context.Add(comment);
+                LogsController.ActionLogChanges(User.Identity.Name, comment, EntityState.Added, ControllerContext, _context);
                 await _context.SaveChangesAsync();
 
-                //log user action
-                LogsController.ActionLogChanges(User.Identity.Name, comment, EntityState.Added, ControllerContext, _context);
-
+                //pass a successfull message 
                 TempData["SuccessMessage"] = "Your comment has been added successfully.";
                 return RedirectToAction("Index", new { id = comment.TaskId }); //first parameter is the action, then controller, then action parameter
             }
@@ -113,8 +110,6 @@ namespace ProjectManagement.Controllers
         }
 
         // POST: Comments/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("CommentId,CommentText,PostedAt,TaskId,AuthorId")] Comment comment)
@@ -137,13 +132,10 @@ namespace ProjectManagement.Controllers
             {
                 try
                 {
-                    //update comment 
+                    //update comment and log user action 
                     _context.Update(comment);
-                    await _context.SaveChangesAsync();
-
-                    //log user action
                     LogsController.ActionLogChanges(User.Identity.Name, comment, EntityState.Modified, ControllerContext, _context);
-
+                    await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -198,13 +190,12 @@ namespace ProjectManagement.Controllers
             var comment = await _context.Comments.FindAsync(id);
             if (comment != null)
             {
+                //remove and log user action
                 _context.Comments.Remove(comment);
+                LogsController.ActionLogChanges(User.Identity.Name, comment, EntityState.Deleted, ControllerContext, _context);
             }
-            
-            await _context.SaveChangesAsync();
 
-            //log user action
-            LogsController.ActionLogChanges(User.Identity.Name, comment, EntityState.Deleted, ControllerContext, _context);
+            await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = "Comment Deleted Successfully.";
             return RedirectToAction("Index", new { id = comment.TaskId }); //first parameter is the action, then controller, then action parameter
