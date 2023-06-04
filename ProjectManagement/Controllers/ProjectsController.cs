@@ -197,6 +197,7 @@ namespace ProjectManagement.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(ProjectUsersVM viewModel)
         {
+
             viewModel.allUsers = _context.Users;
             viewModel.project.ProjectManagerNavigation = _context.Users.Where(x => x.Username == viewModel.project.ProjectManager).FirstOrDefault();
             viewModel.project.StatusNavigation = _context.Statuses.Where(x => x.StatusName == viewModel.project.Status).FirstOrDefault();
@@ -262,6 +263,7 @@ namespace ProjectManagement.Controllers
                 };
                     await _hubContext.Clients.All.SendAsync("getUpdatedNotifications", notifications2);
                 }
+
                 //update project members (remove all and insert again) 
                 var records = _context.UserProjects.Where(p => p.ProjectId == viewModel.project.ProjectId);
                     _context.UserProjects.RemoveRange(records);

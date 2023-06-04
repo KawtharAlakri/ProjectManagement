@@ -1,6 +1,8 @@
 ﻿using ProjectManagement.Models;
 using ProjectManagement.ViewModels;
 using ProjectManagement.Controllers;
+using Microsoft.EntityFrameworkCore;
+
 namespace ProjectManagement.Middleware
 {
     public class ExceptionHandlingMiddleware : IMiddleware
