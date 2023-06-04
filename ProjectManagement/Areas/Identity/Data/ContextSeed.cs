@@ -19,9 +19,9 @@ namespace ProjectManagement.Areas.Identity.Data
         {
             var defaultUser = new ApplicationUser
             {
-                UserName = "admin",
+                UserName = "admin.zainab@poly.com",
                 Email = "admin.zainab@poly.com",
-                Name = "ZA",
+                Name = "admin.zainab@poly.com",
                 EmailConfirmed = true,
                 PhoneNumberConfirmed = true
             };
