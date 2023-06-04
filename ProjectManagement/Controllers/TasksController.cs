@@ -27,7 +27,7 @@ namespace ProjectManagement.Controllers
         }
 
         // GET: Tasks
-        public async Task<IActionResult> Index(int? id, string sreachString, string filterBy, string statusFilter)
+        public async Task<IActionResult> Index(int? id, string searchString, string filterBy, string statusFilter)
         {
             IQueryable<Models.Task> tasksContext = _context.Tasks.Include(t => t.AssignedToNavigation).Include(t => t.Project).Include(t => t.StatusNavigation);
             //display tasks for a project
@@ -48,9 +48,9 @@ namespace ProjectManagement.Controllers
 
 
                 //apply any filtering 
-                if (!String.IsNullOrEmpty(sreachString))
+                if (!String.IsNullOrEmpty(searchString))
                 {
-                    tasksContext = tasksContext.Where(x => x.TaskName.Contains(sreachString));
+                    tasksContext = tasksContext.Where(x => x.TaskName.Contains(searchString));
                 }
                 else if (filterBy == "me")
                 {
