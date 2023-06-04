@@ -85,12 +85,14 @@ namespace ProjectManagement.Controllers
                 return NotFound();
             }
 
+            //if user isn't member or manager of the project, deny access
             var isMember = _context.UserProjects.Any(p => p.Project == project && p.Username == User.Identity.Name);
             if (project.ProjectManager != User.Identity.Name && !isMember)
             {
                 TempData["ErrorMessage"] = "You do not have permission to view this project.";
                 return RedirectToAction(nameof(Index));
             }
+            //get user members of the project
             var userProjects = _context.UserProjects.Where(x => x.ProjectId == project.ProjectId);
             List<string> selectedUsers = new List<string>();
             foreach (UserProject userProject in userProjects)
@@ -105,18 +107,17 @@ namespace ProjectManagement.Controllers
         // GET: Projects/Create
         public IActionResult Create()
         {
+            //pass all users to select from while creating new project
             ViewBag.Users = new SelectList(_context.Users, "Username", "Username");
             return View();
         }
 
         // POST: Projects/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ProjectUsersVM viewModel)
         {
-            // Create the project
+            // Create the project by filling all properties and naviagtions
             Project project = viewModel.project;
             project.CreatedAt = DateTime.Now;
             project.ProjectManagerNavigation = _context.Users.Where(x => x.Username == User.Identity.Name).FirstOrDefault();
@@ -124,14 +125,16 @@ namespace ProjectManagement.Controllers
             project.Status = _context.Statuses.FirstOrDefault(s => s.StatusName == "in progress")?.StatusName;
             project.StatusNavigation = _context.Statuses.FirstOrDefault(s => s.StatusName == "in progress");
 
+            //clear model state and re-validate
             ModelState.Clear();
             TryValidateModel(project);
             if (ModelState.IsValid)
             {
+                //add project, log user action and save changes
                 _context.Projects.Add(project);
-                //log user action
                 LogsController.ActionLogChanges(User.Identity.Name, project, EntityState.Added, ControllerContext, _context);
                 await _context.SaveChangesAsync();
+
                 // Add users to the UserProject table
                 if (viewModel.selectedUsers != null && viewModel.selectedUsers.Count() > 0)
                 {
@@ -151,9 +154,11 @@ namespace ProjectManagement.Controllers
                     await _context.SaveChangesAsync();
                 }
 
+                //redirect to index after successfull add with message 
                 TempData["SuccessMessage"] = "Project Created Successfully.";
                 return RedirectToAction(nameof(Index));
             }
+            //return the same view with an error message 
             TempData["ErrorMessage"] = "Sorry, an error occurred, try again.";
             return View(viewModel);
         }
@@ -172,12 +177,15 @@ namespace ProjectManagement.Controllers
             {
                 return NotFound();
             }
+
+            //if user isn't the manager, restrict edit and redirect to details 
             if (project.ProjectManager != User.Identity.Name)
             {
                 TempData["ErrorMessage"] = "You do not have permission to edit this project.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Details), new { id = project.ProjectId});
             }
 
+            //get project members 
             var userProjects = _context.UserProjects.Where(x => x.ProjectId == project.ProjectId);
             List<string> selectedUsers = new List<string>();
             foreach (UserProject userProject in userProjects)
@@ -191,8 +199,6 @@ namespace ProjectManagement.Controllers
         }
 
         // POST: Projects/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(ProjectUsersVM viewModel)
@@ -226,32 +232,7 @@ namespace ProjectManagement.Controllers
 
                     // Check if the project status has changed
                     var currentStatus = viewModel.project.Status;
-                   // if (previousStatus != currentStatus)
-                   // {
-                   //     var message = $"The status of project {viewModel.project.ProjectName} has changed to {currentStatus}";
-
-                   //     // Get the ApplicationUser object for the project manager
-                   //     var recipient = viewModel.project.ProjectManager.ToString();
-
-                   //     // Save the notification to the database and broadcast to all clients
-                   //     await NotificationsController.PushNotification(recipient, message, _context, _hubContext);
-                   // }
-                   //// Broadcast the notification to all clients using SignalR
-                   //                    var notifications = new List<Notification>
-                   //{
-                   //     new Notification { NotificationText = $"The status of project '{viewModel.project.ProjectName}' has changed to '{currentStatus}'" }
-                   //};
-                   // await _hubContext.Clients.All.SendAsync("getUpdatedNotifications", notifications);
-
-               // }//this used to work
-
-                //    if (previousStatus != currentStatus)
-                //{
-                //    var message = $"The status of project {viewModel.project.ProjectName} has changed to {currentStatus}";
-                //    var recipient = viewModel.project.ProjectManager.ToString();
-                //    await NotificationsController.PushNotification2(recipient, message, _context);
-
-                //}
+                   
                 if (previousStatus != currentStatus)
                 {
                         var message = $"The status of project' {viewModel.project.ProjectName}' has changed to '{currentStatus}'";
@@ -301,7 +282,7 @@ namespace ProjectManagement.Controllers
                     }
                 }
                 TempData["SuccessMessage"] = "Project Updated Successfully.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(View), new {id = viewModel.project.ProjectId});
             }
             TempData["ErrorMessage"] = "Sorry, an error occurred, try again.";
             ViewData["Status"] = new SelectList(_context.Statuses, "StatusName", "StatusName", viewModel.project.Status);
@@ -315,8 +296,6 @@ namespace ProjectManagement.Controllers
             {
                 return NotFound();
             }
-
-
             var project = await _context.Projects
                 .Include(p => p.ProjectManagerNavigation)
                 .Include(p => p.StatusNavigation)
@@ -325,10 +304,11 @@ namespace ProjectManagement.Controllers
             {
                 return NotFound();
             }
+            //restrict delete when user isn't manager 
             if (project.ProjectManager != User.Identity.Name)
             {
                 TempData["ErrorMessage"] = "You do not have permission to delete this project.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(View), new {id = project.ProjectId});
             }
 
             return View(project);
@@ -374,36 +354,9 @@ namespace ProjectManagement.Controllers
         {
             return (_context.Projects?.Any(e => e.ProjectId == id)).GetValueOrDefault();
         }
-        // get the dashboard view
-        //public async Task<IActionResult> View(int id)
-        //{
-        //    var project = await _context.Projects
-        //        .Include(p => p.Tasks)
-        //        .FirstOrDefaultAsync(p => p.ProjectId == id);
+        
 
-        //    if (project == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    var allUsers = await _context.Users.ToListAsync();
-
-        //    var selectedUsers = await _context.UserProjects
-        //        .Where(up => up.ProjectId == id)
-        //        .Select(up => up.Username)
-        //        .ToListAsync();
-
-        //    var model = new ProjectUsersVM
-        //    {
-        //        project = project,
-        //        allUsers = allUsers,
-        //        selectedUsers = selectedUsers
-        //    };
-
-        //    return View(model);
-        //}
-
-        //tester
+        //Project Dashboard actions 
         public async Task<IActionResult> View(int id)
         {
             var project = await _context.Projects
@@ -437,22 +390,7 @@ namespace ProjectManagement.Controllers
             return View(model);
         }
 
-
-        //public IActionResult pendingTask()
-        //{
-        //    try
-        //    {
-        //        var overdueTaskCount = _context.Projects
-        //            .SelectMany(p => p.Tasks)
-        //            .Count(t => t.Status == "overdue");
-        //        return Json(overdueTaskCount);
-        //    }
-        //    catch
-        //    {
-        //        return BadRequest();
-        //    }
-        //}
-
+        
         public IActionResult pendingTask(int projectId)
         {
             try
@@ -528,11 +466,6 @@ namespace ProjectManagement.Controllers
                 return BadRequest();
             }
         }
-        //public IActionResult getProjectTasksStats(int projectId)
-        //{
-        //    var _project = _context.Projects.FirstOrDefault(p=>p.ProjectId == projectId);
-
-        //}
-
+        
     }
 }
