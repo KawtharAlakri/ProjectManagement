@@ -14,28 +14,30 @@
     <div class="row mt-4">
         <div class="col-md-6">
             <div class="upcoming-tasks pb-2">
-                <h4 class="mt-4">Upcoming Tasks</h4>
+            <h4 class="mt-4">Upcoming Tasks</h4>
                 <ul class="list-group">
-                    @foreach (var task in Model.Tasks)
-                    {
-                        // Calculate days left if the due date is not null
-                        int? daysLeft = null;
-                        if (task.DueDate.HasValue)
+                   
+                        @foreach (var task in Model.Tasks)
                         {
-                            TimeSpan timeLeft = task.DueDate.Value - DateTime.Today;
-                            daysLeft = (int)timeLeft.TotalDays;
+                            // Calculate days left if the due date is not null
+                            int? daysLeft = null;
+                            if (task.DueDate.HasValue)
+                            {
+                                TimeSpan timeLeft = task.DueDate.Value - DateTime.Today;
+                                daysLeft = (int)timeLeft.TotalDays;
+                            }
+                            <li onclick="location.href='@Url.Action("Details", new { id = task.TaskId })';" style="cursor:pointer;" class="list-group-item d-flex justify-content-between align-items-center">
+                                @task.TaskName
+                                <span class="badge bg-danger rounded-pill">@daysLeft days left</span>
+                            </li>
                         }
-
-                        <li onclick="location.href='@Url.Action("Details", new { id = task.TaskId })';" style="cursor:pointer;" class="list-group-item d-flex justify-content-between align-items-center">
-                            @task.TaskName
-                            <span class="badge bg-danger rounded-pill">@daysLeft days left</span>
-                        </li>
-                    }
+                    
                 </ul>
             </div>
             <div class="upcoming-tasks mt-4">
                 <h4>Upcoming Projects</h4>
                 <ul class="list-group">
+                   
                     @foreach (var project in Model.projects)
                     {
                         // Calculate days left if the due date is not null
@@ -51,6 +53,7 @@
                             <span class="badge bg-danger rounded-pill">@daysLeft days left</span>
                         </li>
                     }
+                    
                 </ul>
             </div>
         </div>

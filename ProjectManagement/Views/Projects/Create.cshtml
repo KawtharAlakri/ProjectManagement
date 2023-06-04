@@ -8,8 +8,14 @@
 <h1>Create</h1>
 
 <h4>Project</h4>
-<hr />
-
+<hr/>
+@if (TempData.ContainsKey("ErrorMessage") && !String.IsNullOrEmpty(TempData["ErrorMessage"].ToString()))
+{
+    <div class="alert alert-dismissible alert-danger">
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <strong>@TempData["ErrorMessage"] </strong>
+    </div>
+}
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Create">

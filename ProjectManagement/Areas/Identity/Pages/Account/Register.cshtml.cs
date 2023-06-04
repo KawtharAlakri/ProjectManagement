@@ -205,6 +205,7 @@ namespace ProjectManagement.Areas.Identity.Pages.Account
             try
             {
                 return Activator.CreateInstance<ApplicationUser>();
+                
             }
             catch
             {

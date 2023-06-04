@@ -19,7 +19,7 @@ namespace ProjectManagement.Services
             while (!stoppingToken.IsCancellationRequested)
             {
                 // Perform the task status update
-                _taskStatusUpdater.UpdateTaskStatus();
+                _taskStatusUpdater.UpdateTaskStatusAsync();
 
                 // Wait for 1 hour before the next update
                 await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
