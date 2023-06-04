@@ -27,7 +27,7 @@ namespace ProjectManagement.Controllers
         }
 
         // GET: Tasks
-        public async Task<IActionResult> Index(int? id, string sreachString, string filterBy, string statusFilter)
+        public async Task<IActionResult> Index(int? id, string searchString, string filterBy, string statusFilter)
         {
             IQueryable<Models.Task> tasksContext = _context.Tasks.Include(t => t.AssignedToNavigation).Include(t => t.Project).Include(t => t.StatusNavigation);
             //display tasks for a project
@@ -45,22 +45,22 @@ namespace ProjectManagement.Controllers
                     TempData["ErrorMessage"] = "You do not have permission to view this page.";
                     return RedirectToAction("Index", "Projects");
                 }
-            }
 
-            //apply any filtering 
-            if (!String.IsNullOrEmpty(sreachString))
-            {
-                tasksContext = tasksContext.Where(x => x.TaskName.Contains(sreachString));
-            }
-            else if (filterBy == "me")
-            {
-                tasksContext = tasksContext.Where(x => x.AssignedTo == User.Identity.Name);
-            }
-            else if (!String.IsNullOrEmpty(statusFilter))
-            {
-                tasksContext = tasksContext.Where(x => x.Status == statusFilter);
-            }
 
+                //apply any filtering 
+                if (!String.IsNullOrEmpty(searchString))
+                {
+                    tasksContext = tasksContext.Where(x => x.TaskName.Contains(searchString));
+                }
+                else if (filterBy == "me")
+                {
+                    tasksContext = tasksContext.Where(x => x.AssignedTo == User.Identity.Name);
+                }
+                else if (!String.IsNullOrEmpty(statusFilter))
+                {
+                    tasksContext = tasksContext.Where(x => x.Status == statusFilter);
+                }
+            }
             return View(await tasksContext.ToListAsync());
         }
 
