@@ -27,125 +27,6 @@ namespace ProjectManagement.Controllers
         }
 
 
-        // GET: Notifications
-        public async Task<IActionResult> Index()
-        {
-            return View(await _context.Notifications.ToListAsync());
-        }
-        // GET: Notifications
-        //public async Task<IActionResult> Index()
-        //{
-        //    var projectManagementContext = _context.Notifications.Include(n => n.RecipientNavigation);
-        //    return View(await projectManagementContext.ToListAsync());
-        //}
-
-        // GET: Notifications/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null || _context.Notifications == null)
-            {
-                return NotFound();
-            }
-
-            var notification = await _context.Notifications
-                .Include(n => n.RecipientNavigation)
-                .FirstOrDefaultAsync(m => m.NotificationId == id);
-            if (notification == null)
-            {
-                return NotFound();
-            }
-
-            return View(notification);
-        }
-
-        // GET: Notifications/Create
-        public IActionResult Create()
-        {
-            ViewData["Recipient"] = new SelectList(_context.Users, "Username", "Username");
-            return View();
-        }
-
-        // POST: Notifications/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Notification viewModel, String recipent)
-        {
-            //create notification 
-            Notification notification = viewModel;
-            notification.GeneratedAt = DateTime.Now;
-            notification.IsRead = false;
-            notification.Recipient = recipent;
-            notification.RecipientNavigation = notification.RecipientNavigation;
-
-            ModelState.Clear();
-            if (ModelState.IsValid)
-            {
-                _context.Add(notification);
-                await _context.SaveChangesAsync();
-                await NotificationBroadcast();
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["Recipient"] = new SelectList(_context.Users, "Username", "Username", notification.Recipient);
-            return View(notification);
-        }
-
-        // GET: Notifications/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null || _context.Notifications == null)
-            {
-                return NotFound();
-            }
-
-            var notification = await _context.Notifications.FindAsync(id);
-            if (notification == null)
-            {
-                return NotFound();
-            }
-            ViewData["Recipient"] = new SelectList(_context.Users, "Username", "Username", notification.Recipient);
-            return View(notification);
-        }
-
-        // POST: Notifications/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("NotificationId,NotificationText,Recipient,IsRead,GeneratedAt")] Notification notification)
-        {
-            if (id != notification.NotificationId)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(notification);
-                    await _context.SaveChangesAsync();
-                    await NotificationBroadcast();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!NotificationExists(notification.NotificationId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["Recipient"] = new SelectList(_context.Users, "Username", "Username", notification.Recipient);
-            return View(notification);
-        }
-
         // GET: Notifications/Delete/5
 
         public async Task<IActionResult> Delete(int? id)
@@ -167,6 +48,7 @@ namespace ProjectManagement.Controllers
         }
 
         // POST: Notifications/Delete/5
+        [Authorize]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         [HttpDelete]
@@ -188,7 +70,7 @@ namespace ProjectManagement.Controllers
             return Redirect("/Notifications/Client");
         }
 
-
+        [Authorize]
         [HttpPut]
         [Route("Notifications/MarkAsRead/{id}")]
         public async Task<IActionResult> MarkNotificationAsRead(int id)
@@ -227,6 +109,7 @@ namespace ProjectManagement.Controllers
             return View();
         }
         ////for a specific user 
+        [Authorize]
         [Route("Notifications/GetForUser")]
         public IActionResult GetForUser(string username)
         {
