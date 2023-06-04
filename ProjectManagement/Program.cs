@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using ProjectManagement.Middleware;
+using ProjectManagement.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,7 @@ builder.Services.AddControllersWithViews();
 // Register your custom middleware
 builder.Services.AddScoped<ExceptionHandlingMiddleware>();
 
+//context injection
 builder.Services.AddDbContext<ProjectManagementContext>(options => options.UseSqlServer(
     builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -31,6 +33,10 @@ builder.Services.AddDefaultIdentity<IdentityUser>()
 
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<NotificationsHub>();
+
+//register background services to uautomatically update status
+builder.Services.AddSingleton<TaskStatusUpdater>();
+builder.Services.AddHostedService<TaskStatusUpdateService>();
 
 var app = builder.Build();
 
@@ -48,6 +54,7 @@ app.UseAuthentication();;
 app.UseAuthorization();
 app.MapHub<NotificationsHub>("/NotificationsHub");
 
+//register exception handler
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.MapControllerRoute(
