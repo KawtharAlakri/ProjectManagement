@@ -127,7 +127,7 @@ namespace ProjectManagement.Areas.Identity.Pages.Account
         public async System.Threading.Tasks.Task OnGetAsync(string returnUrl = null)
         {
             await ContextSeed.SeedRolesAsync( _userManager, _roleManager);
-            await ContextSeed.SeedAdminAsync(_userManager, _roleManager);
+            await ContextSeed.SeedAdminAsync(_userManager, _roleManager, _projectManagementContext);
             ReturnUrl = returnUrl;
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             Input = new InputModel()
@@ -147,15 +147,15 @@ namespace ProjectManagement.Areas.Identity.Pages.Account
             if (ModelState.IsValid)
             {
                 var user = CreateUser();
-                
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-                user.Name = Input.Name;
+                user.Name = Input.Email;
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(user, "User");
+                    
                     // Create a new instance of your "User" model
                     var customUser = new User
                     {
