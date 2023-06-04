@@ -9,7 +9,20 @@
 
 <h4>Task</h4>
 <hr />
-
+@if (TempData.ContainsKey("ErrorMessage") && !String.IsNullOrEmpty(TempData["ErrorMessage"].ToString()))
+{
+    <div class="alert alert-dismissible alert-danger">
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <strong>@TempData["ErrorMessage"] </strong>
+    </div>
+}
+@if (TempData.ContainsKey("SuccessMessage") && !String.IsNullOrEmpty(TempData["SuccessMessage"].ToString()))
+{
+    <div class="alert alert-dismissible alert-success">
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <strong>@TempData["SuccessMessage"]</strong>
+    </div>
+}
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Edit">

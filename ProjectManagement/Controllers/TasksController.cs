@@ -45,22 +45,22 @@ namespace ProjectManagement.Controllers
                     TempData["ErrorMessage"] = "You do not have permission to view this page.";
                     return RedirectToAction("Index", "Projects");
                 }
-            }
 
-            //apply any filtering 
-            if (!String.IsNullOrEmpty(sreachString))
-            {
-                tasksContext = tasksContext.Where(x => x.TaskName.Contains(sreachString));
-            }
-            else if (filterBy == "me")
-            {
-                tasksContext = tasksContext.Where(x => x.AssignedTo == User.Identity.Name);
-            }
-            else if (!String.IsNullOrEmpty(statusFilter))
-            {
-                tasksContext = tasksContext.Where(x => x.Status == statusFilter);
-            }
 
+                //apply any filtering 
+                if (!String.IsNullOrEmpty(sreachString))
+                {
+                    tasksContext = tasksContext.Where(x => x.TaskName.Contains(sreachString));
+                }
+                else if (filterBy == "me")
+                {
+                    tasksContext = tasksContext.Where(x => x.AssignedTo == User.Identity.Name);
+                }
+                else if (!String.IsNullOrEmpty(statusFilter))
+                {
+                    tasksContext = tasksContext.Where(x => x.Status == statusFilter);
+                }
+            }
             return View(await tasksContext.ToListAsync());
         }
 
